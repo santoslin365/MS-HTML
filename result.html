@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>您的專屬分析報告</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; max-width: 800px; margin: auto; background-color: #f9f9f9; }
+        .printable-area { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; }
+        .section { margin: 30px 0; padding-bottom: 20px; border-bottom: 1px dashed #ccc; }
+        .analysis { background: #e8f4fc; padding: 20px; border-radius: 10px; }
+        .banner { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white; padding: 20px; border-radius: 10px; text-align: center; }
+        button { padding: 12px 25px; background: #2575fc; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+        button:hover { background: #1a68e8; }
+        @media print {
+            button { display: none; }
+            .printable-area { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="printable-area" id="printableArea">
+        <!-- 標題區 -->
+        <div class="banner">
+            <h1>✨ 專屬 AI 互動分析報告 ✨</h1>
+            <p>以下為您獨一無二的性格與星座解析</p>
+        </div>
+
+        <!-- 基本資料 -->
+        <div class="section">
+            <h2>👤 玩家資料</h2>
+            <p><strong>玩家 ID：</strong> <span id="pid"></span></p>
+            <p><strong>玩家編號：</strong> <span id="pnum"></span></p>
+            <p><strong>生日：</strong> <span id="bday"></span></p>
+        </div>
+
+        <!-- 星座分析 -->
+        <div class="section">
+            <h2>♋ 星座解析</h2>
+            <p><strong>您的星座：</strong> <span id="zodiacSign"></span></p>
+            <p id="zodiacTraits"></p>
+        </div>
+
+        <!-- 問答分析 -->
+        <div class="section">
+            <h2>📊 問答分析結果</h2>
+            <div class="analysis">
+                <p id="answerSummary"></p>
+                <p id="personalityType"></p>
+                <p id="aiAdvice"></p>
+            </div>
+        </div>
+
+        <!-- 結尾 -->
+        <div style="text-align: center; margin-top: 40px; color: #7f8c8d; font-style: italic;">
+            <p>本報告由 AI 系統生成，僅供娛樂參考。</p>
+            <p>生成日期： <span id="today"></span></p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+        <button onclick="window.print()">🖨️ 列印此報告</button>
+        <button onclick="location.href='index.html'">🔄 重新開始</button>
+    </div>
+
+    <script>
+        // 從網址取得所有資料
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerId = urlParams.get('playerId');
+        const playerNumber = urlParams.get('playerNumber');
+        const birthday = urlParams.get('birthday');
+        const q1 = urlParams.get('q1');
+        const q2 = urlParams.get('q2');
+        const q3 = urlParams.get('q3');
+
+        // 1. 顯示基本資料
+        document.getElementById('pid').textContent = playerId;
+        document.getElementById('pnum').textContent = playerNumber;
+        document.getElementById('bday').textContent = birthday;
+        document.getElementById('today').textContent = new Date().toLocaleDateString();
+
+        // 2. 星座分析函數 (簡單版)
+        function getZodiacSignAndTraits(birthdayStr) {
+            const date = new Date(birthdayStr);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+
+            const zodiacs = [
+                { name: "摩羯座", start: [12, 22], end: [1, 19], traits: "穩重、負責、有耐心" },
+                { name: "水瓶座", start: [1, 20], end: [2, 18], traits: "創新、獨立、理性" },
+                { name: "雙魚座", start: [2, 19], end: [3, 20], traits: "浪漫、敏感、有同情心" },
+                { name: "牡羊座", start: [3, 21], end: [4, 19], traits: "勇敢、熱情、直接" },
+                { name: "金牛座", start: [4, 20], end: [5, 20], traits: "務實、沉穩、喜愛美好事物" },
+                { name: "雙子座", start: [5, 21], end: [6, 20], traits: "靈活、好奇、善於溝通" },
+                { name: "巨蟹座", start: [6, 21], end: [7, 22], traits: "溫柔、顧家、直覺強" },
+                { name: "獅子座", start: [7, 23], end: [8, 22], traits: "自信、慷慨、有領導力" },
+                { name: "處女座", start: [8, 23], end: [9, 22], traits: "細心、分析力強、追求完美" },
+                { name: "天秤座", start: [9, 23], end: [10, 22], traits: "優雅、公正、喜歡和諧" },
+                { name: "天蠍座", start: [10, 23], end: [11, 21], traits: "神秘、果斷、有洞察力" },
+                { name: "射手座", start: [11, 22], end: [12, 21], traits: "樂觀、愛自由、愛探索" }
+            ];
+
+            for (let z of zodiacs) {
+                const [startM, startD] = z.start;
+                const [endM, endD] = z.end;
+
+                if ((month === startM && day >= startD) || (month === endM && day <= endD)) {
+                    return { sign: z.name, traits: z.traits };
+                }
+            }
+            return { sign: "未知", traits: "無法判斷" };
+        }
+
+        // 3. 問答分析邏輯 (模擬AI)
+        function analyzeAnswers(q1, q2, q3) {
+            const scores = { A: 0, B: 0, C: 0 };
+            scores[q1]++; scores[q2]++; scores[q3]++;
+
+            let type = "平衡型";
+            if (scores.A >= 2) type = "行動派";
+            else if (scores.B >= 2) type = "思考派";
+            else if (scores.C >= 2) type = "社交派";
+
+            const advice = {
+                "行動派": "您充滿行動力，適合擔任開創者。建議在行動前稍作規劃。",
+                "思考派": "您善於分析，是團隊中的軍師。試著多分享您的想法。",
+                "社交派": "您人際融洽，是很好的協調者。可以多發揮連結眾人的能力。",
+                "平衡型": "您各方面均衡發展，適應力強。保持開放態度嘗試新事物。"
+            };
+
+            return {
+                summary: `您的答案分布：A(${scores.A})、B(${scores.B})、C(${scores.C})`,
+                type: type,
+                advice: advice[type]
+            };
+        }
+
+        // 4. 執行分析並顯示結果
+        const zodiac = getZodiacSignAndTraits(birthday);
+        document.getElementById('zodiacSign').textContent = zodiac.sign;
+        document.getElementById('zodiacTraits').textContent = `性格特點：${zodiac.traits}`;
+
+        const analysis = analyzeAnswers(q1, q2, q3);
+        document.getElementById('answerSummary').textContent = analysis.summary;
+        document.getElementById('personalityType').innerHTML = `<strong>類型判定：${analysis.type}</strong>`;
+        document.getElementById('aiAdvice').textContent = `💡 AI 建議：${analysis.advice}`;
+    </script>
+</body>
+</html>

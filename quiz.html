@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>問答時間</title>
+    <style>
+        body { font-family: Arial; padding: 30px; max-width: 600px; margin: auto; }
+        .question { margin-bottom: 30px; }
+        button { padding: 10px 20px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <h1>個性小問答</h1>
+    <p>請回答以下問題：</p>
+
+    <form id="quizForm">
+        <!-- 問題1 -->
+        <div class="question">
+            <p>1. 當你遇到挑戰時，你通常會？</p>
+            <label><input type="radio" name="q1" value="A"> 正面迎擊，立即行動</label><br>
+            <label><input type="radio" name="q1" value="B"> 仔細規劃，尋求幫助</label><br>
+            <label><input type="radio" name="q1" value="C"> 隨遇而安，船到橋頭自然直</label>
+        </div>
+
+        <!-- 問題2 -->
+        <div class="question">
+            <p>2. 你偏好哪種休閒活動？</p>
+            <label><input type="radio" name="q2" value="A"> 運動或戶外探險</label><br>
+            <label><input type="radio" name="q2" value="B"> 看書、看電影</label><br>
+            <label><input type="radio" name="q2" value="C"> 和朋友聊天聚會</label>
+        </div>
+
+        <!-- 問題3 -->
+        <div class="question">
+            <p>3. 做決定時，你更依賴？</p>
+            <label><input type="radio" name="q3" value="A"> 邏輯與分析</label><br>
+            <label><input type="radio" name="q3" value="B"> 直覺與感受</label><br>
+            <label><input type="radio" name="q3" value="C"> 他人意見或數據</label>
+        </div>
+
+        <button type="button" onclick="submitQuiz()">查看分析結果</button>
+    </form>
+
+    <script>
+        // 從網址取得上一頁傳來的資料
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerId = urlParams.get('playerId');
+        const playerNumber = urlParams.get('playerNumber');
+        const birthday = urlParams.get('birthday');
+
+        function submitQuiz() {
+            // 收集答案
+            const q1 = document.querySelector('input[name="q1"]:checked')?.value;
+            const q2 = document.querySelector('input[name="q2"]:checked')?.value;
+            const q3 = document.querySelector('input[name="q3"]:checked')?.value;
+
+            if (!q1 || !q2 || !q3) {
+                alert('請回答所有問題！');
+                return;
+            }
+
+            // 將所有資料編碼後傳到結果頁
+            const queryString = new URLSearchParams({
+                playerId,
+                playerNumber,
+                birthday,
+                q1, q2, q3
+            }).toString();
+
+            window.location.href = `result.html?${queryString}`;
+        }
+    </script>
+</body>
+</html>

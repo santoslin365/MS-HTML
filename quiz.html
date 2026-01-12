@@ -184,7 +184,7 @@
     </div>
 
     <div id="loadingArea">
-        <h2 style="margin-bottom: 20px; color: #6a11cb;">AI 運算中心</h2>
+        <h2 style="margin-bottom: 20px; color: #6a11cb;">AI分析匹配中</h2>
         <div class="progress-container">
             <div id="progressBar" class="progress-bar"></div>
         </div>
@@ -229,12 +229,12 @@
             // 階段一：數據掃描中 (前 3 秒，進度 0-50%)
             if (totalProgress <= 50) {
                 let scanPercent = Math.round(totalProgress * 2); // 將 0-50 換算為 0-100
-                statusText.innerText = `💻 數據掃描中... ${scanPercent}%`;
+                statusText.innerText = `💻 彈珠角色數據掃描中... ${scanPercent}%`;
             } 
             // 階段二：角色特質匹配中 (後 3 秒，進度 51-100%)
             else if (totalProgress <= 100) {
                 let matchPercent = Math.round((totalProgress - 50) * 2); // 將 50-100 換算為 0-100
-                statusText.innerText = `🧬 角色特質匹配中... ${matchPercent}%`;
+                statusText.innerText = `🧬 彈珠角色特質匹配中... ${matchPercent}%`;
             }
 
             // 4. 動畫結束，跳轉頁面

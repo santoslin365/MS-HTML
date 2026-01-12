@@ -14,14 +14,23 @@
 
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            /* 背景圖片設置：設置為置中、不重複、固定不動 */
-            background: url('images/main-bg.png') no-repeat center center fixed;
-            background-size: cover; /* 讓圖片填滿整個螢幕 */
+            /* 設定四色漸層背景 */
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            /* 執行名為 gradient 的動畫，持續 15 秒，無限循環 */
+            animation: gradient 15s ease infinite;
             min-height: 100vh;
-            display: flex; /* 使用 Flexbox 讓內容垂直水平置中 */
+            display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
+        }
+        
+        /* 定義漸層流動的動畫路徑 */
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* 背景遮罩層：當背景圖太亮時，可用此層來增加文字的可讀性 */
@@ -37,13 +46,17 @@
 
         /* 主容器樣式：白色的半透明卡片感 */
         .container {
-            background: rgba(255, 255, 255, 0.92);
+            /* 使用 rgba 最後一個數值 0.8 控制透明度，backdrop-filter 負責模糊背景 */
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* 確保 Safari 瀏覽器也能顯示 */
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 20px;
             padding: 40px;
             width: 100%;
             max-width: 500px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); /* 外陰影增加立體感 */
-            animation: fadeIn 0.8s ease-out; /* 頁面載入時的淡入動畫 */
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s ease-out;
         }
 
         /* 定義淡入動畫 */

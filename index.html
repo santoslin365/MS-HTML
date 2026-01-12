@@ -113,6 +113,16 @@ input:focus {
             const today = new Date();
             const defaultDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
             document.getElementById('birthday').value = defaultDate.toISOString().split('T')[0];
+
+            // 在 script 標籤內加入
+        document.getElementById('playerId').addEventListener('input', function(e) {
+            const val = e.target.value;
+            if(val.length >= 3) {
+                // 這裡可以動態改變輸入框邊框顏色，給予正面回饋
+                this.style.borderColor = "#23d5ab";
+            }
+        });
+
             
             // 表單驗證
             document.getElementById('startForm').addEventListener('submit', function(e) {

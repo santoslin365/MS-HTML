@@ -5,39 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>星座人格分析 | 開始</title>
     <style>
-/* 強化背景與容器感 */
-body {
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite; /* 動態背景 */
-}
+        /* --- 基礎設定 --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* 確保邊框與內距不會撐大元素寬度 */
+        }
 
-@keyframes gradient {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            /* 背景圖片設置：設置為置中、不重複、固定不動 */
+            background: url('images/main-bg.png') no-repeat center center fixed;
+            background-size: cover; /* 讓圖片填滿整個螢幕 */
+            min-height: 100vh;
+            display: flex; /* 使用 Flexbox 讓內容垂直水平置中 */
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
 
-.container {
-    background: rgba(255, 255, 255, 0.8); /* 毛玻璃透明感 */
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-}
+        /* 背景遮罩層：當背景圖太亮時，可用此層來增加文字的可讀性 */
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85); 
+            z-index: -1;
+        }
 
-/* 讓輸入框點擊時更有「被啟動」的感覺 */
-input:focus {
-    transform: scale(1.02);
-    box-shadow: 0 0 15px rgba(106, 17, 203, 0.3);
-}
+        /* 主容器樣式：白色的半透明卡片感 */
+        .container {
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); /* 外陰影增加立體感 */
+            animation: fadeIn 0.8s ease-out; /* 頁面載入時的淡入動畫 */
+        }
+
+        /* 定義淡入動畫 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Logo 區域佈局 */
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* 主要圖示容器 */
+        .main-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 確保圖片不變形地縮放 */
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        /* 表單輸入項目的群組間距 */
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        /* 標籤文字樣式 (如：玩家ID) */
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        /* 輸入框預設樣式 */
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s; /* 增加過渡動畫，讓顏色切換平滑 */
+        }
+
+        /* 輸入框點擊(聚焦)時的樣式 */
+        input:focus {
+            outline: none;
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        }
+
+        /* 開始按鈕樣式：使用漸層色 */
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        /* 按鈕懸浮效果 */
+        button:hover {
+            transform: translateY(-2px); /* 輕微上浮 */
+            box-shadow: 0 10px 20px rgba(106, 17, 203, 0.3);
+        }
+
+        /* 按鈕點擊效果 */
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* 輸入提示小字 */
+        .hint {
+            font-size: 13px;
+            color: #95a5a6;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* 頁尾免責聲明區域 */
+        .footer {
+            text-align: center;
+            margin-top: 25px;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        /* 手機版 RWD 適應 */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            h1 { font-size: 24px; }
+            .main-icon { width: 80px; height: 80px; }
+        }
     </style>
 </head>
 <body>
-    <!-- [可選] 如果背景圖太亮導致文字不清楚，可以取消註解這行 -->
-    <!-- <div class="background-overlay"></div> -->
     
     <div class="container">
         <div class="logo">
-            <!-- [需要修改2] 這裡放你的logo圖片 -->
             <div class="main-icon">
                 <img src="images/logo.png" alt="星座人格分析系統">
             </div>
@@ -46,14 +185,9 @@ input:focus {
         </div>
 
         <form id="startForm" action="quiz.html" method="GET">
+            
             <div class="form-group">
-                <label for="playerId">
-                    <!-- [可選] 如果需要標籤圖示 -->
-                    <!-- <span class="label-icon">
-                        <img src="icon-user.png" alt="玩家">
-                    </span> -->
-                    玩家 ID
-                </label>
+                <label for="playerId">玩家 ID</label>
                 <input type="text" id="playerId" name="playerId" 
                        placeholder="請輸入您的遊戲ID" 
                        required
@@ -65,13 +199,7 @@ input:focus {
             </div>
 
             <div class="form-group">
-                <label for="playerNumber">
-                    <!-- [可選] 如果需要標籤圖示 -->
-                    <!-- <span class="label-icon">
-                        <img src="icon-hashtag.png" alt="編號">
-                    </span> -->
-                    玩家編號
-                </label>
+                <label for="playerNumber">玩家編號</label>
                 <input type="text" id="playerNumber" name="playerNumber" 
                        placeholder="請輸入9位數字編號" 
                        required
@@ -82,13 +210,7 @@ input:focus {
             </div>
 
             <div class="form-group">
-                <label for="birthday">
-                    <!-- [可選] 如果需要標籤圖示 -->
-                    <!-- <span class="label-icon">
-                        <img src="icon-cake.png" alt="生日">
-                    </span> -->
-                    出生日期
-                </label>
+                <label for="birthday">出生日期</label>
                 <input type="date" id="birthday" name="birthday" 
                        required
                        min="1900-01-01"
@@ -96,9 +218,7 @@ input:focus {
                 <span class="hint">我們將根據您的生日分析星座特質</span>
             </div>
 
-            <button type="submit">
-                開始分析之旅
-            </button>
+            <button type="submit">開始分析之旅</button>
         </form>
 
         <div class="footer">
@@ -109,35 +229,25 @@ input:focus {
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 設置生日預設值為18年前
+            // 1. 設定自動預設值：將生日預設為 18 年前，符合一般使用者年齡
             const today = new Date();
             const defaultDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
             document.getElementById('birthday').value = defaultDate.toISOString().split('T')[0];
-
-            // 在 script 標籤內加入
-        document.getElementById('playerId').addEventListener('input', function(e) {
-            const val = e.target.value;
-            if(val.length >= 3) {
-                // 這裡可以動態改變輸入框邊框顏色，給予正面回饋
-                this.style.borderColor = "#23d5ab";
-            }
-        });
-
             
-            // 表單驗證
+            // 2. 表單驗證邏輯：按下按鈕後先執行檢查
             document.getElementById('startForm').addEventListener('submit', function(e) {
                 const playerId = document.getElementById('playerId').value.trim();
                 const playerNumber = document.getElementById('playerNumber').value.trim();
                 const birthday = document.getElementById('birthday').value;
                 
-                // 驗證玩家ID：3-10個字元，中文、英文、數字
+                // 驗證玩家ID長度
                 if (playerId.length < 3 || playerId.length > 10) {
                     alert('玩家ID必須是3-10個字元');
-                    e.preventDefault();
+                    e.preventDefault(); // 阻止表單跳頁
                     return;
                 }
                 
-                // 檢查是否只包含允許的字元
+                // 驗證玩家ID格式 (中文、英文、數字)
                 const playerIdRegex = /^[A-Za-z0-9\u4e00-\u9fa5]+$/;
                 if (!playerIdRegex.test(playerId)) {
                     alert('玩家ID只能包含中文、英文或數字');
@@ -145,7 +255,7 @@ input:focus {
                     return;
                 }
                 
-                // 驗證玩家編號：必須是9位數字
+                // 驗證玩家編號：必須剛好是 9 位純數字
                 const playerNumberRegex = /^\d{9}$/;
                 if (!playerNumberRegex.test(playerNumber)) {
                     alert('玩家編號必須是9位數字（例如：123456789）');
@@ -153,7 +263,7 @@ input:focus {
                     return;
                 }
                 
-                // 確認生日合理
+                // 驗證生日是否合理 (不能是明天以後)
                 const birthDate = new Date(birthday);
                 if (birthDate > today) {
                     alert('生日不能是未來日期');
@@ -161,7 +271,7 @@ input:focus {
                     return;
                 }
                 
-                // 過場效果
+                // 3. 過場效果：讓按鈕變更文字並禁用，防止重複點擊
                 const button = document.querySelector('button');
                 button.innerHTML = '準備中...';
                 button.disabled = true;

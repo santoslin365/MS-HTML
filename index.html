@@ -319,6 +319,24 @@
                     // 限制長度不超過 9 位 (防止某些瀏覽器下 maxlength 失效)
                     if (this.value.length > 9) {
                         this.value = this.value.slice(0, 9);
+
+                        document.addEventListener('DOMContentLoaded', function() {
+                    // 1. 設定生日預設值 (略...)
+                
+                    // 2. [新增] 玩家編號即時攔截邏輯
+                    const playerNumberInput = document.getElementById('playerNumber');
+                    playerNumberInput.addEventListener('input', function(e) {
+                        if (/\D/g.test(this.value)) {
+                            alert('玩家編號僅能輸入數字！');
+                            this.value = this.value.replace(/\D/g, '');
+                        }
+                    });
+                
+                    // 3. 表單提交驗證邏輯 (原本的 submit 監聽器...)
+                    document.getElementById('startForm').addEventListener('submit', function(e) {
+                        // ... 原有的驗證邏輯
+                    });
+                });
                     }
                 });
             });

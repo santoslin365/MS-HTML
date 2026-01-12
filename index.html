@@ -299,22 +299,29 @@
                 button.innerHTML = '準備中...';
                 button.disabled = true;
                 }
-                                   document.addEventListener('DOMContentLoaded', function() {
-                        // 1. 設定生日預設值 (略...)
+                // 取得玩家編號輸入框元素
+                const playerNumberInput = document.getElementById('playerNumber');
+                
+                // 使用 'input' 事件進行即時攔截，這能同時處理「鍵盤輸入」與「滑鼠貼上」
+                playerNumberInput.addEventListener('input', function(e) {
+                    // 取得當前輸入的原始內容
+                    const originalValue = this.value;
                     
-                        // 2. [新增] 玩家編號即時攔截邏輯
-                        const playerNumberInput = document.getElementById('playerNumber');
-                        playerNumberInput.addEventListener('input', function(e) {
-                            if (/\D/g.test(this.value)) {
-                                alert('玩家編號僅能輸入數字！');
-                                this.value = this.value.replace(/\D/g, '');
-                            }
-                        });
-                    
-                        // 3. 表單提交驗證邏輯 (原本的 submit 監聽器...)
-                        document.getElementById('startForm').addEventListener('submit', function(e) {
-                            // ... 原有的驗證邏輯
-                        });
+                    // 使用正規表達式檢查是否包含非數字字元 (\D 代表非數字)
+                    if (/\D/g.test(originalValue)) {
+                        // 1. 立即彈出提示框
+                        alert('輸入錯誤：玩家編號僅能輸入數字，請勿輸入英文或符號！');
+                        
+                        // 2. 物理性過濾：將非數字字元全部刪除，只保留數字
+                        // 這會讓玩家感覺「根本打不進去」英文
+                        this.value = originalValue.replace(/\D/g, '');
+                    }
+                
+                    // 3. 長度限制：確保不超過 9 位（防止某些輸入法繞過限制）
+                    if (this.value.length > 9) {
+                        this.value = this.value.slice(0, 9);
+                    }
+                });
                     });                                                   
                 });
             });

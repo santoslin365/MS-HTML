@@ -212,14 +212,14 @@
             </div>
 
             <div class="form-group">
-                <label for="playerNumber">玩家編號</label>
+                <label for="playerNumber">怪物彈珠UID</label>
                 <input type="text" id="playerNumber" name="playerNumber" 
-                       placeholder="請輸入9位數字編號" 
+                       placeholder="請輸入9位數字UID" 
                        required
                        pattern="\d{9}"
                        maxlength="9"
                        title="請輸入9位數字">
-                <span class="hint">請輸入9位數字編號（例如：123456789）</span>
+                <span class="hint">請輸入9位數UID（例如：123,456,789）</span>
             </div>
 
             <div class="form-group">
@@ -228,14 +228,14 @@
                        required
                        min="1900-01-01"
                        max="2024-12-31">
-                <span class="hint">我們將根據您的生日分析星座特質</span>
+                <span class="hint">我們將根據您的生日分析星座特質來匹配適合的怪物彈珠角色</span>
             </div>
 
             <button type="submit">開始分析之旅</button>
         </form>
 
         <div class="footer">
-            <p>您的資料僅用於本次分析，不會被儲存</p>
+            <p>您的資料僅用於本次分析，不會被使用於其它用途</p>
             <p>分析結果僅供娛樂參考</p>
         </div>
     </div>
@@ -271,7 +271,7 @@
                 // 驗證玩家編號：必須剛好是 9 位純數字
                 const playerNumberRegex = /^\d{9}$/;
                 if (!playerNumberRegex.test(playerNumber)) {
-                    alert('玩家編號必須是9位數字（例如：123456789）');
+                    alert('玩家編號必須是9位數字（例如：123,456,789）');
                     e.preventDefault();
                     return;
                 }

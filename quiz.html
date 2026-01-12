@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分析報告 | 怪物彈珠特質分析</title>
+    <title>個性特質測驗 | 進行中</title>
     <style>
-        /* --- 1. 視覺風格：同步首頁的動態漸層與毛玻璃感 --- */
+        /* --- 同步 index.html 的視覺設計 --- */
         * {
             margin: 0;
             padding: 0;
@@ -14,6 +14,7 @@
 
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            /* 動態漸層背景 */
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
             animation: gradient 15s ease infinite;
@@ -30,7 +31,7 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* 容器：毛玻璃質感 */
+        /* 毛玻璃容器 */
         .container {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(10px);
@@ -39,7 +40,7 @@
             border-radius: 20px;
             padding: 40px;
             width: 100%;
-            max-width: 700px;
+            max-width: 600px;
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             animation: fadeIn 0.8s ease-out;
         }
@@ -49,171 +50,131 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* 分析報告的標題與區塊樣式 */
-        .report-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid rgba(106, 17, 203, 0.1);
-        }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 30px; }
 
-        .report-header h1 { color: #2c3e50; font-size: 26px; }
-        .player-info { color: #7f8c8d; font-size: 14px; margin-top: 5px; }
-
-        .section {
+        /* 問題卡片設計 */
+        .question {
             margin-bottom: 25px;
+            background: rgba(255, 255, 255, 0.5);
             padding: 20px;
-            background: rgba(255, 255, 255, 0.6);
             border-radius: 15px;
         }
 
-        .section h2 {
-            color: #6a11cb;
-            font-size: 18px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .analysis-content {
+        .question p {
+            font-weight: 600;
             color: #34495e;
-            line-height: 1.6;
-            font-size: 16px;
+            margin-bottom: 15px;
+            font-size: 18px;
         }
 
-        /* 按鈕區域 */
-        .actions {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
+        /* 選項美化：點擊範圍更大 */
+        label {
+            display: block;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
+        label:hover {
+            border-color: #6a11cb;
+            background: #fdfbff;
+        }
+
+        /* 選中後的樣式 */
+        input[type="radio"]:checked + span {
+            color: #6a11cb;
+            font-weight: bold;
+        }
+
+        label:has(input[type="radio"]:checked) {
+            border-color: #6a11cb;
+            background: rgba(106, 17, 203, 0.05);
+        }
+
+        /* 送出按鈕 */
         button {
-            flex: 1;
-            padding: 15px;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
             border: none;
             border-radius: 10px;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #f8f9fa;
-            color: #34495e;
-            border: 1px solid #e0e0e0;
+            margin-top: 10px;
         }
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
-        /* 列印模式隱藏按鈕 */
-        @media print {
-            .actions { display: none; }
-            body { background: white !important; }
-            .container { box-shadow: none; border: none; }
+            box-shadow: 0 10px 20px rgba(106, 17, 203, 0.3);
         }
     </style>
 </head>
 <body>
-
+    
     <div class="container">
-        <div class="report-header">
-            <h1>📊 專屬人格分析報告</h1>
-            <div class="player-info" id="playerDisplay">載入中...</div>
-        </div>
+        <h1>🔍 特質傾向測試</h1>
 
-        <div class="section">
-            <h2>✨ 星座守護特質</h2>
-            <div class="analysis-content" id="zodiacInfo">
-                正在根據星象運算中...
+        <form id="quizForm">
+            <div class="question">
+                <p>1. 在團隊合作中，你通常扮演什麼角色？</p>
+                <label><input type="radio" name="q1" value="A"> <span>帶頭衝鋒的決策者</span></label>
+                <label><input type="radio" name="q1" value="B"> <span>冷靜分析的軍師</span></label>
+                <label><input type="radio" name="q1" value="C"> <span>協調氣氛的後援</span></label>
             </div>
-        </div>
 
-        <div class="section">
-            <h2>🧠 行為模式分析</h2>
-            <div class="analysis-content" id="behaviorInfo">
-                正在分析您的答題習慣...
+            <div class="question">
+                <p>2. 面對未知的挑戰，你的第一反應是？</p>
+                <label><input type="radio" name="q2" value="A"> <span>先做再說，在行動中學習</span></label>
+                <label><input type="radio" name="q2" value="B"> <span>查閱資料，準備萬全再出發</span></label>
+                <label><input type="radio" name="q2" value="C"> <span>找人討論，聽聽大家的想法</span></label>
             </div>
-        </div>
 
-        <div class="section" style="background: rgba(106, 17, 203, 0.05); border-left: 5px solid #6a11cb;">
-            <h2>💡 AI 指南針</h2>
-            <div class="analysis-content" id="aiAdvice">
-                正在產出專屬建議...
+            <div class="question">
+                <p>3. 你最希望擁有哪種超能力？</p>
+                <label><input type="radio" name="q3" value="A"> <span>瞬間移動（效率與速度）</span></label>
+                <label><input type="radio" name="q3" value="B"> <span>預知未來（智慧與掌控）</span></label>
+                <label><input type="radio" name="q3" value="C"> <span>心靈感應（連結與共感）</span></label>
             </div>
-        </div>
 
-        <div class="actions">
-            <button class="btn-secondary" onclick="window.print()">保存報告 (PDF)</button>
-            <button class="btn-primary" onclick="location.href='index.html'">重新測試</button>
-        </div>
+            <button type="button" onclick="submitQuiz()">生成 AI 分析報告</button>
+        </form>
     </div>
 
     <script>
-        // --- 1. 解析網址傳來的參數 ---
-        const params = new URLSearchParams(window.location.search);
-        const playerId = params.get('playerId') || "冒險者";
-        const playerNumber = params.get('playerNumber') || "000000000";
-        const birthday = params.get('birthday');
-        const q1 = params.get('q1');
-        const q2 = params.get('q2');
-        const q3 = params.get('q3');
+        // 取得網址列參數（從 index.html 傳來的資料）
+        const urlParams = new URLSearchParams(window.location.search);
+        const playerId = urlParams.get('playerId');
+        const playerNumber = urlParams.get('playerNumber');
+        const birthday = urlParams.get('birthday');
 
-        // 顯示基本資訊
-        document.getElementById('playerDisplay').textContent = 
-            `玩家：${playerId} | UID：${playerNumber} | 生日：${birthday}`;
+        function submitQuiz() {
+            // 檢查是否每題都選了
+            const q1 = document.querySelector('input[name="q1"]:checked')?.value;
+            const q2 = document.querySelector('input[name="q2"]:checked')?.value;
+            const q3 = document.querySelector('input[name="q3"]:checked')?.value;
 
-        // --- 2. 星座判斷邏輯 ---
-        function getZodiac(dateStr) {
-            const date = new Date(dateStr);
-            const m = date.getMonth() + 1;
-            const d = date.getDate();
-            
-            if ((m == 3 && d >= 21) || (m == 4 && d <= 19)) return { name: "白羊座", trait: "活力四射、勇往直前" };
-            if ((m == 4 && d >= 20) || (m == 5 && d <= 20)) return { name: "金牛座", trait: "沉穩內斂、耐心十足" };
-            if ((m == 5 && d >= 21) || (m == 6 && d <= 21)) return { name: "雙子座", trait: "反應敏捷、好奇心強" };
-            if ((m == 6 && d >= 22) || (m == 7 && d <= 22)) return { name: "巨蟹座", trait: "細心體貼、重視安全感" };
-            if ((m == 7 && d >= 23) || (m == 8 && d <= 22)) return { name: "獅子座", trait: "自信大方、領導力強" };
-            if ((m == 8 && d >= 23) || (m == 9 && d <= 22)) return { name: "處女座", trait: "追求完美、邏輯嚴密" };
-            if ((m == 9 && d >= 23) || (m == 10 && d <= 23)) return { name: "天秤座", trait: "優雅平衡、善於協調" };
-            if ((m == 10 && d >= 24) || (m == 11 && d <= 22)) return { name: "天蠍座", trait: "洞察力深、意志堅定" };
-            if ((m == 11 && d >= 23) || (m == 12 && d <= 21)) return { name: "射手座", trait: "嚮往自由、樂觀開朗" };
-            if ((m == 12 && d >= 22) || (m == 1 && d <= 19)) return { name: "摩羯座", trait: "踏實負責、毅力驚人" };
-            if ((m == 1 && d >= 20) || (m == 2 && d <= 18)) return { name: "水瓶座", trait: "創意無限、思想獨立" };
-            return { name: "雙魚座", trait: "溫柔浪漫、直覺敏銳" };
+            if (!q1 || !q2 || !q3) {
+                alert('請回答所有問題，這能讓 AI 分析更準確！');
+                return;
+            }
+
+            // 把所有資料（含前一頁的）打包傳給下一頁
+            const finalData = new URLSearchParams({
+                playerId,
+                playerNumber,
+                birthday,
+                q1, q2, q3
+            });
+
+            window.location.href = `result.html?${finalData.toString()}`;
         }
-
-        // --- 3. 模擬分析邏輯 ---
-        const zodiac = getZodiac(birthday);
-        document.getElementById('zodiacInfo').innerHTML = `您的星座是 <strong>${zodiac.name}</strong>。在星象中，您展現出 <strong>${zodiac.trait}</strong> 的特質。`;
-
-        // 簡單根據 Q1 A/B/C 來分類性格
-        let behaviorType = "";
-        let advice = "";
-        
-        if (q1 === 'A') {
-            behaviorType = "主動攻勢型";
-            advice = "您在面對挑戰時傾向於迎頭痛擊。建議在衝刺時，也要注意隊友的動向，這會讓你的勝率更高。";
-        } else if (q1 === 'B') {
-            behaviorType = "冷靜策劃型";
-            advice = "您擁有卓越的觀察力。在關鍵時刻，您的精確判斷是隊伍獲勝的核心。繼續保持這份理智。";
-        } else {
-            behaviorType = "穩定協作型";
-            advice = "您是最佳的夥伴。比起個人表現，您更在乎團隊的穩定。在現實生活中，您也是大家最信賴的後盾。";
-        }
-
-        document.getElementById('behaviorInfo').textContent = `分析您的問答結果，您屬於「${behaviorType}」。`;
-        document.getElementById('aiAdvice').textContent = advice;
-
     </script>
 </body>
 </html>

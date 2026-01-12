@@ -159,7 +159,7 @@
             playerNumberInput.addEventListener('input', function() {
                 // 如果偵測到非數字字元
                 if (/\D/g.test(this.value)) {
-                    alert('玩家編號僅能輸入數字！');
+                    alert('玩家UID僅能輸入數字！');
                     // 立即移除所有非數字字元
                     this.value = this.value.replace(/\D/g, '');
                 }

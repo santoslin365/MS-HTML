@@ -184,6 +184,16 @@
             h1 { font-size: 24px; }
             .main-icon { width: 80px; height: 80px; }
         }
+
+                /* 當輸入內容符合驗證規則時，邊框變綠色 */
+        input:valid {
+            border-color: #23d5ab;
+        }
+        
+        /* 當輸入內容不符合時（且已經有點擊過），邊框變紅色 */
+        input:invalid:not(:placeholder-shown) {
+            border-color: #e73c7e;
+        }
     </style>
 </head>
 <body>

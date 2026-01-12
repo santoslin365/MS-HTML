@@ -3,23 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>個性特質測驗 | 進行中</title>
+    <title>個性特質測驗 | AI 分析中</title>
     <style>
-        /* --- [CSS 樣式區] --- */
-        
-        /* 基礎重設：消除瀏覽器預設邊距，確保排版一致 */
+        /* --- 基礎視覺設定 (同步 index.html) --- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* 頁面背景：設定動態流動漸層 */
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
-            animation: gradient 15s ease infinite; /* 15秒循環一次的背景動畫 */
+            animation: gradient 15s ease infinite;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -27,17 +24,15 @@
             padding: 20px;
         }
         
-        /* 定義背景流動動畫的路徑 */
         @keyframes gradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
-        /* 主容器：毛玻璃半透明效果 */
         .container {
-            background: rgba(255, 255, 255, 0.9); /* 白色背景但有 90% 透明度 */
-            backdrop-filter: blur(10px);        /* 後方背景模糊效果 */
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 30px;
             width: 100%;
@@ -48,10 +43,9 @@
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
-        /* 每一個問題的獨立區塊 */
         .question-block {
             margin-bottom: 20px;
             background: white;
@@ -67,7 +61,6 @@
             display: block;
         }
 
-        /* 選項按鈕的外框（讓玩家好點選） */
         .option-label {
             display: block;
             padding: 10px 15px;
@@ -77,22 +70,18 @@
             border-radius: 8px;
             cursor: pointer;
             transition: 0.3s;
-            color: #333;
         }
 
-        /* 當滑鼠移到選項上時變色 */
         .option-label:hover {
             border-color: #6a11cb;
             background: #f0e6ff;
         }
 
-        /* 被選中時的文字變化（當 input 為 checked 時，後面的 span 變色） */
         input[type="radio"]:checked + .option-text {
             color: #6a11cb;
             font-weight: bold;
         }
 
-        /* 送出按鈕：漸層配色 */
         .submit-btn {
             width: 100%;
             padding: 15px;
@@ -103,107 +92,164 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
         }
 
-        .submit-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px); /* 懸浮時輕微往上飄 */
+        /* --- 載入動畫專用樣式 --- */
+        #loadingArea {
+            display: none; /* 初始隱藏 */
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 15px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #6a11cb, #2575fc);
+            transition: width 0.1s linear;
+        }
+
+        #statusText {
+            font-size: 16px;
+            color: #2c3e50;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🔍 特質傾向測試</h1>
-    
-    <form id="quizForm">
-        <div class="question-block">
-            <span class="question-title">1. 面對困難的挑戰時，你通常？</span>
-            <label class="option-label">
-                <input type="radio" name="q1" value="A"> 
-                <span class="option-text">直接行動，邊做邊學</span>
-            </label>
-            <label class="option-label">
-                <input type="radio" name="q1" value="B"> 
-                <span class="option-text">收集資料，擬定計畫</span>
-            </label>
-            <label class="option-label">
-                <input type="radio" name="q1" value="C"> 
-                <span class="option-text">尋求他人建議與幫助</span>
-            </label>
-        </div>
+    <div id="quizContent">
+        <h1>🔍 特質傾向測試</h1>
+        <form id="quizForm">
+            <div class="question-block">
+                <span class="question-title">1. 面對困難的挑戰時，你通常？</span>
+                <label class="option-label">
+                    <input type="radio" name="q1" value="A"> 
+                    <span class="option-text">直接行動，邊做邊學</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="q1" value="B"> 
+                    <span class="option-text">收集資料，擬定計畫</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="q1" value="C"> 
+                    <span class="option-text">尋求他人建議與幫助</span>
+                </label>
+            </div>
 
-        <div class="question-block">
-            <span class="question-title">2. 你最理想的放鬆方式是？</span>
-            <label class="option-label">
-                <input type="radio" name="q2" value="A"> 
-                <span class="option-text">戶外運動或冒險</span>
-            </label>
-            <label class="option-label">
-                <input type="radio" name="q2" value="B"> 
-                <span class="option-text">獨自安靜閱讀或看電影</span>
-            </label>
-            <label class="option-label">
-                <input type="radio" name="q2" value="C"> 
-                <span class="option-text">與好朋友聚會聊天</span>
-            </label>
-        </div>
+            <div class="question-block">
+                <span class="question-title">2. 你最理想的放鬆方式是？</span>
+                <label class="option-label">
+                    <input type="radio" name="q2" value="A"> 
+                    <span class="option-text">戶外運動或冒險</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="q2" value="B"> 
+                    <span class="option-text">獨自安靜閱讀或看電影</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="q2" value="C"> 
+                    <span class="option-text">與好朋友聚會聊天</span>
+                </label>
+            </div>
 
-        <div class="question-block">
-            <span class="question-title">3. 做決定時，你比較依賴？</span>
-            <label class="option-label">
-                <input type="radio" name="q3" value="A"> 
-                <span class="option-text">自己的第一直覺</span>
-            </label>
-            <label class="option-label">
-                <input type="radio" name="q3" value="B"> 
-                <span class="option-text">過往的經驗與數據分析</span>
-            </label>
-            <label class="option-label">
-                <input type="radio" name="q3" value="C"> 
-                <span class="option-text">大家一致認同的選擇</span>
-            </label>
-        </div>
+            <div class="question-block">
+                <span class="question-title">3. 做決定時，你比較依賴？</span>
+                <label class="option-label">
+                    <input type="radio" name="q3" value="A"> 
+                    <span class="option-text">自己的第一直覺</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="q3" value="B"> 
+                    <span class="option-text">過往的經驗與數據分析</span>
+                </label>
+                <label class="option-label">
+                    <input type="radio" name="q3" value="C"> 
+                    <span class="option-text">大家一致認同的選擇</span>
+                </label>
+            </div>
 
-        <button type="button" class="submit-btn" onclick="goToResult()">生成 AI 分析報告</button>
-    </form>
+            <button type="button" class="submit-btn" id="startBtn" onclick="runAIAnalysis()">生成 AI 分析報告</button>
+        </form>
+    </div>
+
+    <div id="loadingArea">
+        <h2 style="margin-bottom: 20px; color: #6a11cb;">AI 運算中心</h2>
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+        <p id="statusText">正在連線至運算核心...</p>
+    </div>
 </div>
 
 <script>
-    // --- [JavaScript 邏輯區] ---
-
-    // 1. [接收資料]：從網址列抓取 index.html 傳過來的玩家參數
+    // 接收來自 index.html 的基本資料
     const params = new URLSearchParams(window.location.search);
-    const playerId = params.get('playerId');      // 玩家ID
-    const playerNumber = params.get('playerNumber'); // 玩家編號
-    const birthday = params.get('birthday');      // 生日
+    const playerId = params.get('playerId');
+    const playerNumber = params.get('playerNumber');
+    const birthday = params.get('birthday');
 
-    // 2. [按鈕功能]：當點擊提交按鈕時執行的函數
-    function goToResult() {
-        // [抓取答案]：尋找每一題被勾選(checked)的選項內容
+    function runAIAnalysis() {
+        // 1. 檢查是否填寫完整
         const q1 = document.querySelector('input[name="q1"]:checked')?.value;
         const q2 = document.querySelector('input[name="q2"]:checked')?.value;
         const q3 = document.querySelector('input[name="q3"]:checked')?.value;
 
-        // [驗證]：如果有人少填題目，彈出警告訊息
         if (!q1 || !q2 || !q3) {
-            alert('請回答所有題目再提交喔！');
+            alert('請完整回答所有問題！');
             return;
         }
 
-        // [封裝資料]：將「第一頁的個資」與「這一頁的答案」全部打包到新網址
-        const finalParams = new URLSearchParams({
-            playerId,      // 繼承自 index
-            playerNumber,  // 繼承自 index
-            birthday,      // 繼承自 index
-            q1,            // 本頁答案1
-            q2,            // 本頁答案2
-            q3             // 本頁答案3
-        });
+        // 2. 切換介面：隱藏題目，顯示動畫
+        document.getElementById('quizContent').style.display = 'none';
+        document.getElementById('loadingArea').style.display = 'block';
 
-        // [執行跳轉]：帶著所有資料跳轉到結果頁面 (result.html)
-        window.location.href = `result.html?${finalParams.toString()}`;
+        const progressBar = document.getElementById('progressBar');
+        const statusText = document.getElementById('statusText');
+
+        let totalProgress = 0;
+        const duration = 6000; // 總時間 6 秒
+        const step = 50;       // 每 0.05 秒更新一次
+        
+        // 3. 開始執行計時器動畫
+        const timer = setInterval(() => {
+            totalProgress += (step / duration) * 100;
+            progressBar.style.width = totalProgress + '%';
+
+            // 階段一：數據掃描中 (前 3 秒，進度 0-50%)
+            if (totalProgress <= 50) {
+                let scanPercent = Math.round(totalProgress * 2); // 將 0-50 換算為 0-100
+                statusText.innerText = `💻 數據掃描中... ${scanPercent}%`;
+            } 
+            // 階段二：角色特質匹配中 (後 3 秒，進度 51-100%)
+            else if (totalProgress <= 100) {
+                let matchPercent = Math.round((totalProgress - 50) * 2); // 將 50-100 換算為 0-100
+                statusText.innerText = `🧬 角色特質匹配中... ${matchPercent}%`;
+            }
+
+            // 4. 動畫結束，跳轉頁面
+            if (totalProgress >= 100) {
+                clearInterval(timer);
+                
+                // 打包所有資料
+                const finalData = new URLSearchParams({
+                    playerId, playerNumber, birthday, q1, q2, q3
+                });
+                
+                // 跳轉至結果頁
+                window.location.href = `result.html?${finalData.toString()}`;
+            }
+        }, step);
     }
 </script>
 

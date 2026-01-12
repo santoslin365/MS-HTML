@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>玩家&彈珠角色 特質人格分析 | 開始</title>
+    <title>玩家 特質人格分析 | 開始</title>
     <style>
         /* --- 基礎設定 --- */
         * {
@@ -107,7 +107,7 @@
             <div class="main-icon">
                 <img src="images/logo.png" alt="星座人格分析系統">
             </div>
-            <h1>玩家&彈珠角色 特質人格分析</h1>
+            <h1>怪物彈珠玩家 特質人格分析</h1>
             <p class="subtitle">透過生日與簡單問答，探索您的人格解析與怪物彈珠適正的角色匹配</p>
         </div>
 
@@ -123,12 +123,12 @@
             </div>
 
             <div class="form-group">
-                <label for="playerNumber">怪物彈珠UID</label>
+                <label for="playerNumber">怪物彈珠 遊戲UID</label>
                 <input type="text" id="playerNumber" name="playerNumber" 
                        placeholder="請輸入9位數字UID" 
                        required maxlength="9"
                        title="請輸入9位數字">
-                <span class="hint">請輸入9位數UID（例如：123456789）</span>
+                <span class="hint">請輸入9位數的遊戲UID（例如：123456789）</span>
             </div>
 
             <div class="form-group">
@@ -159,7 +159,7 @@
             playerNumberInput.addEventListener('input', function() {
                 // 如果偵測到非數字字元
                 if (/\D/g.test(this.value)) {
-                    alert('玩家UID僅能輸入數字！');
+                    alert('遊戲UID僅能輸入數字！');
                     // 立即移除所有非數字字元
                     this.value = this.value.replace(/\D/g, '');
                 }
@@ -181,7 +181,7 @@
                 
                 // 驗證玩家編號 (必須剛好 9 位)
                 if (playerNumber.length !== 9) {
-                    alert('玩家編號必須剛好是9位數字');
+                    alert('遊戲UID必須剛好是9位數字');
                     e.preventDefault();
                     return;
                 }

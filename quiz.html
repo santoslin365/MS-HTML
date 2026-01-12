@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>個性特質測驗 | 進行中</title>
     <style>
-        /* 基礎設定 */
+        /* --- [CSS 樣式區] --- */
+        
+        /* 基礎重設：消除瀏覽器預設邊距，確保排版一致 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* 頁面背景：設定動態流動漸層 */
         body {
             font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
             background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
             background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
+            animation: gradient 15s ease infinite; /* 15秒循環一次的背景動畫 */
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -24,15 +27,17 @@
             padding: 20px;
         }
         
+        /* 定義背景流動動畫的路徑 */
         @keyframes gradient {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
 
+        /* 主容器：毛玻璃半透明效果 */
         .container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9); /* 白色背景但有 90% 透明度 */
+            backdrop-filter: blur(10px);        /* 後方背景模糊效果 */
             border-radius: 20px;
             padding: 30px;
             width: 100%;
@@ -44,9 +49,9 @@
             text-align: center;
             color: #2c3e50;
             margin-bottom: 20px;
-            font-size: 24px;
         }
 
+        /* 每一個問題的獨立區塊 */
         .question-block {
             margin-bottom: 20px;
             background: white;
@@ -62,10 +67,9 @@
             display: block;
         }
 
-        /* 選項外框樣式 */
+        /* 選項按鈕的外框（讓玩家好點選） */
         .option-label {
             display: block;
-            position: relative;
             padding: 10px 15px;
             margin-bottom: 8px;
             background: #f8f9fa;
@@ -73,21 +77,22 @@
             border-radius: 8px;
             cursor: pointer;
             transition: 0.3s;
-            color: #333; /* 確保文字顏色是深色 */
+            color: #333;
         }
 
+        /* 當滑鼠移到選項上時變色 */
         .option-label:hover {
             border-color: #6a11cb;
             background: #f0e6ff;
         }
 
-        /* 當選中時的樣式 */
+        /* 被選中時的文字變化（當 input 為 checked 時，後面的 span 變色） */
         input[type="radio"]:checked + .option-text {
             color: #6a11cb;
             font-weight: bold;
         }
 
-        /* 按鈕樣式 */
+        /* 送出按鈕：漸層配色 */
         .submit-btn {
             width: 100%;
             padding: 15px;
@@ -103,7 +108,7 @@
 
         .submit-btn:hover {
             opacity: 0.9;
-            transform: translateY(-2px);
+            transform: translateY(-2px); /* 懸浮時輕微往上飄 */
         }
     </style>
 </head>
@@ -111,6 +116,7 @@
 
 <div class="container">
     <h1>🔍 特質傾向測試</h1>
+    
     <form id="quizForm">
         <div class="question-block">
             <span class="question-title">1. 面對困難的挑戰時，你通常？</span>
@@ -165,32 +171,38 @@
 </div>
 
 <script>
-    // 接收來自 index.html 的資料
-    const params = new URLSearchParams(window.location.search);
-    const playerId = params.get('playerId');
-    const playerNumber = params.get('playerNumber');
-    const birthday = params.get('birthday');
+    // --- [JavaScript 邏輯區] ---
 
+    // 1. [接收資料]：從網址列抓取 index.html 傳過來的玩家參數
+    const params = new URLSearchParams(window.location.search);
+    const playerId = params.get('playerId');      // 玩家ID
+    const playerNumber = params.get('playerNumber'); // 玩家編號
+    const birthday = params.get('birthday');      // 生日
+
+    // 2. [按鈕功能]：當點擊提交按鈕時執行的函數
     function goToResult() {
-        // 取得使用者選了什麼
+        // [抓取答案]：尋找每一題被勾選(checked)的選項內容
         const q1 = document.querySelector('input[name="q1"]:checked')?.value;
         const q2 = document.querySelector('input[name="q2"]:checked')?.value;
         const q3 = document.querySelector('input[name="q3"]:checked')?.value;
 
-        // 檢查是否有題目沒選
+        // [驗證]：如果有人少填題目，彈出警告訊息
         if (!q1 || !q2 || !q3) {
             alert('請回答所有題目再提交喔！');
             return;
         }
 
-        // 把舊資料 + 新答案 全部傳給 result.html
+        // [封裝資料]：將「第一頁的個資」與「這一頁的答案」全部打包到新網址
         const finalParams = new URLSearchParams({
-            playerId,
-            playerNumber,
-            birthday,
-            q1, q2, q3
+            playerId,      // 繼承自 index
+            playerNumber,  // 繼承自 index
+            birthday,      // 繼承自 index
+            q1,            // 本頁答案1
+            q2,            // 本頁答案2
+            q3             // 本頁答案3
         });
 
+        // [執行跳轉]：帶著所有資料跳轉到結果頁面 (result.html)
         window.location.href = `result.html?${finalParams.toString()}`;
     }
 </script>

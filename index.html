@@ -251,29 +251,7 @@
     </div>
 
     <script>
-                // 獲取玩家編號輸入框元素
-        const playerNumberInput = document.getElementById('playerNumber');
-        
-        // 監聽輸入事件
-        playerNumberInput.addEventListener('input', function(e) {
-            // 取得目前輸入的值
-            const value = this.value;
-            
-            // 檢查是否包含非數字字元
-            // \D 代表「非數字」的正規表達式
-            if (/\D/g.test(value)) {
-                alert('玩家編號僅能輸入數字！');
-                
-                // 自動過濾掉非數字字元，只留下數字
-                this.value = value.replace(/\D/g, '');
-            }
-            
-            // 限制長度不超過 9 位 (防止某些瀏覽器下 maxlength 失效)
-            if (this.value.length > 9) {
-                this.value = this.value.slice(0, 9);
-            }
-        });
-        document.addEventListener('DOMContentLoaded', function() {
+         document.addEventListener('DOMContentLoaded', function() {
             // 1. 設定自動預設值：將生日預設為 18 年前，符合一般使用者年齡
             const today = new Date();
             const defaultDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
@@ -320,7 +298,24 @@
                 const button = document.querySelector('button');
                 button.innerHTML = '準備中...';
                 button.disabled = true;
-                    }
+                }
+                                   document.addEventListener('DOMContentLoaded', function() {
+                        // 1. 設定生日預設值 (略...)
+                    
+                        // 2. [新增] 玩家編號即時攔截邏輯
+                        const playerNumberInput = document.getElementById('playerNumber');
+                        playerNumberInput.addEventListener('input', function(e) {
+                            if (/\D/g.test(this.value)) {
+                                alert('玩家編號僅能輸入數字！');
+                                this.value = this.value.replace(/\D/g, '');
+                            }
+                        });
+                    
+                        // 3. 表單提交驗證邏輯 (原本的 submit 監聽器...)
+                        document.getElementById('startForm').addEventListener('submit', function(e) {
+                            // ... 原有的驗證邏輯
+                        });
+                    });                                                   
                 });
             });
         });

@@ -298,6 +298,29 @@
                 const button = document.querySelector('button');
                 button.innerHTML = '準備中...';
                 button.disabled = true;
+
+                // 獲取玩家編號輸入框元素
+                const playerNumberInput = document.getElementById('playerNumber');
+                
+                // 監聽輸入事件
+                playerNumberInput.addEventListener('input', function(e) {
+                    // 取得目前輸入的值
+                    const value = this.value;
+                    
+                    // 檢查是否包含非數字字元
+                    // \D 代表「非數字」的正規表達式
+                    if (/\D/g.test(value)) {
+                        alert('玩家編號僅能輸入數字！');
+                        
+                        // 自動過濾掉非數字字元，只留下數字
+                        this.value = value.replace(/\D/g, '');
+                    }
+                    
+                    // 限制長度不超過 9 位 (防止某些瀏覽器下 maxlength 失效)
+                    if (this.value.length > 9) {
+                        this.value = this.value.slice(0, 9);
+                    }
+                });
             });
         });
     </script>

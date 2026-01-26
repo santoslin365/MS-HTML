@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本一 AI 進化版 - 智能讀取偵測</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
+    <style>
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        .orb {
+            position: absolute;
+            width: 600px; height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            mix-blend-mode: screen;
+            opacity: 0.5;
+            will-change: transform;
+        }
+        .orb-1 { background: linear-gradient(45deg, #ff00ea, #00d2ff); top: -10%; left: -10%; }
+        .orb-2 { background: linear-gradient(45deg, #00ff88, #ff0055); bottom: -10%; right: -10%; }
+        .orb-3 { background: linear-gradient(45deg, #ffcc00, #0066ff); top: 50%; left: 50%; }
+
+        #center-image {
+            position: relative;
+            max-width: 500px;
+            z-index: 5;
+            mix-blend-mode: lighten;
+            pointer-events: none;
+        }
+
+        #input-dialog {
+            position: fixed;
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            z-index: 1000;
+        }
+
+        #input-dialog input {
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            outline: none;
+            width: 300px;
+            font-size: 16px;
+        }
+
+        #ai-response {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            max-width: 90vw;
+            max-height: 25vh; 
+            overflow-y: auto; 
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 30px 40px;
+            border-radius: 24px;
+            color: #fff;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        #close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: background 0.3s, opacity 0.3s;
+            font-size: 14px;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        #close-btn:hover { background: rgba(255, 255, 255, 0.4); }
+
+        #ai-response::-webkit-scrollbar { width: 5px; }
+        #ai-response::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        #cursor-follower {
+            position: fixed;
+            width: 10px; height: 10px;
+            background-color: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+            transform: translate(-50%, -50%);
+            left: 0; top: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="orb-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <img src="logo.png" id="center-image">
+
+    <div id="ai-response">
+        <div id="close-btn">✕</div>
+        <div id="ai-text"></div>
+    </div>
+
+    <div id="cursor-follower"></div>
+
+    <div id="input-dialog">
+        <input type="text" placeholder="向 AI 提問..." id="main-input">
+    </div>
+
+<script type="module">
+    import { GoogleGenerativeAI } from "@google/generative-ai";
+
+    const API_KEY = 'AIzaSyDnzezT-zBPzvTQAbZoNn8EJsWuY0vy_cM'; 
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+
+    const follower = document.querySelector('#cursor-follower');
+    const dialog = document.querySelector('#input-dialog');
+    const mainInput = document.querySelector('#main-input');
+    const aiResponseDiv = document.querySelector('#ai-response');
+    const aiText = document.querySelector('#ai-text');
+    const closeBtn = document.querySelector('#close-btn');
+
+    let autoHideTimer;
+
+    // 停止計時器 (滑鼠進來時用)
+    function stopTimer() {
+        clearTimeout(autoHideTimer);
+    }
+
+    // 開始 15 秒倒數 (滑鼠離開或發送成功後用)
+    function startTimer() {
+        stopTimer();
+        autoHideTimer = setTimeout(() => {
+            closeResponse();
+        }, 15000);
+    }
+
+    function closeResponse() {
+        gsap.to(aiResponseDiv, { opacity: 0, y: 30, duration: 0.5, onComplete: () => {
+            aiText.innerText = "";
+            closeBtn.style.opacity = "0";
+        }});
+    }
+
+    // ✨ 新增：滑鼠進入與離開偵測
+    aiResponseDiv.addEventListener('mouseenter', () => {
+        stopTimer(); // 使用者正在看，停止倒數
+        console.log("偵測到滑鼠進入，計時器暫停");
+    });
+
+    aiResponseDiv.addEventListener('mouseleave', () => {
+        // 只有在對話框還顯示的情況下才重新開始倒數
+        if (parseFloat(window.getComputedStyle(aiResponseDiv).opacity) > 0.1) {
+            startTimer(); 
+            console.log("滑鼠離開，15秒後將自動關閉");
+        }
+    });
+
+    // 動畫與基本邏輯保持不變
+    document.querySelectorAll('.orb').forEach((orb, i) => {
+        const move = () => {
+            gsap.to(orb, {
+                x: (Math.random() - 0.5) * window.innerWidth,
+                y: (Math.random() - 0.5) * window.innerHeight,
+                duration: 7 + i * 3,
+                ease: "sine.inOut",
+                onComplete: move
+            });
+        };
+        move();
+    });
+
+    window.addEventListener("mousemove", e => {
+        gsap.to(follower, { x: e.clientX, y: e.clientY, duration: 0.1 });
+    });
+
+    window.addEventListener("mousedown", e => {
+        if (e.target.id === 'close-btn') {
+            closeResponse();
+            return;
+        }
+
+        if (aiResponseDiv.contains(e.target)) {
+            closeBtn.style.opacity = "0";
+            return;
+        }
+
+        if (e.target.tagName !== 'INPUT') {
+            dialog.style.display = 'block';
+            gsap.fromTo(dialog, { scale: 0.8, opacity: 0 }, { 
+                scale: 1, opacity: 1, 
+                left: e.clientX + 10, top: e.clientY + 10,
+                duration: 0.4, ease: "back.out(1.7)"
+            });
+            setTimeout(() => mainInput.focus(), 50);
+
+            if (parseFloat(window.getComputedStyle(aiResponseDiv).opacity) > 0) {
+                closeBtn.style.opacity = "1";
+            }
+        }
+    });
+
+    mainInput.addEventListener("keydown", async e => {
+        if (e.key === "Enter") {
+            const prompt = mainInput.value;
+            if (!prompt) return;
+
+            mainInput.disabled = true;
+            aiText.innerHTML = "<span style='opacity:0.5'>思考中...</span>";
+            closeBtn.style.opacity = "0";
+            gsap.to(aiResponseDiv, { opacity: 1, y: 0, duration: 0.5 });
+
+            try {
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                const text = response.text();
+
+                aiText.innerText = text;
+                gsap.fromTo(aiResponseDiv, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.8 });
+                
+                startTimer(); // 回覆完畢開始計時
+
+            } catch (err) {
+                aiText.innerText = "連線失敗：" + err.message;
+            } finally {
+                mainInput.value = "";
+                mainInput.disabled = false;
+                gsap.to(dialog, { scale: 0, opacity: 0, onComplete: () => dialog.style.display = 'none' });
+            }
+        }
+    });
+</script>
+</body>
+</html>

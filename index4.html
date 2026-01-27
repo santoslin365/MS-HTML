@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>版本一 - opeco 雲端靈魂版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        /* CSS 保持不變，維持你的版本一風格 */
+        body, html { margin: 0; padding: 0; width: 100%; height: 100vh; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; font-family: 'PingFang TC', sans-serif; }
+        .orb { position: absolute; width: 600px; height: 600px; border-radius: 50%; filter: blur(120px); mix-blend-mode: screen; opacity: 0.5; will-change: transform; }
+        .orb-1 { background: linear-gradient(45deg, #ff00ea, #00d2ff); top: -10%; left: -10%; }
+        .orb-2 { background: linear-gradient(45deg, #00ff88, #ff0055); bottom: -10%; right: -10%; }
+        .orb-3 { background: linear-gradient(45deg, #ffcc00, #0066ff); top: 50%; left: 50%; }
+        #center-image { position: relative; max-width: 500px; z-index: 5; mix-blend-mode: lighten; pointer-events: none; }
+        #input-dialog { position: fixed; display: none; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); padding: 20px; border-radius: 15px; z-index: 1000; }
+        #input-dialog input { padding: 12px 18px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.6); color: white; outline: none; width: 300px; font-size: 16px; }
+        #ai-response { position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%); width: 600px; max-width: 90vw; max-height: 25vh; overflow-y: auto; background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 30px 40px; border-radius: 24px; color: #fff; font-size: 1.1rem; line-height: 1.7; z-index: 100; opacity: 0; pointer-events: auto; text-align: center; }
+        #close-btn { position: absolute; top: 15px; right: 15px; width: 24px; height: 24px; background: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; opacity: 0; transition: 0.3s; font-size: 14px; color: #fff; border: 1px solid rgba(255,255,255,0.3); }
+        #cursor-follower { position: fixed; width: 10px; height: 10px; background-color: #fff; border-radius: 50%; pointer-events: none; z-index: 999; transform: translate(-50%, -50%); left: 0; top: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="orb-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <img src="logo.png" id="center-image" alt="Logo">
+
+    <div id="ai-response">
+        <div id="close-btn">✕</div>
+        <div id="ai-text"></div>
+    </div>
+
+    <div id="cursor-follower"></div>
+
+    <div id="input-dialog">
+        <input type="text" placeholder="向 opeco 提問..." id="main-input">
+    </div>
+
+<script>
+    // --- 配置區 ---
+    const HF_TOKEN = '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'; 
+    const MODEL_ID = "google/gemma-2-2b-it";
+    const PERSONALITY_URL = "https://raw.githubusercontent.com/santoslin365/MS-HTML/main/opeco.txt"; 
+
+    const follower = document.querySelector('#cursor-follower');
+    const dialog = document.querySelector('#input-dialog');
+    const mainInput = document.querySelector('#main-input');
+    const aiResponseDiv = document.querySelector('#ai-response');
+    const aiText = document.querySelector('#ai-text');
+    const closeBtn = document.querySelector('#close-btn');
+
+    let autoHideTimer;
+
+    function stopTimer() { clearTimeout(autoHideTimer); }
+    function startTimer() { stopTimer(); autoHideTimer = setTimeout(() => closeResponse(), 15000); }
+    function closeResponse() { gsap.to(aiResponseDiv, { opacity: 0, y: 30, duration: 0.5 }); }
+
+    document.querySelectorAll('.orb').forEach((orb, i) => {
+        const move = () => { gsap.to(orb, { x: (Math.random() - 0.5) * window.innerWidth, y: (Math.random() - 0.5) * window.innerHeight, duration: 7 + i * 3, ease: "sine.inOut", onComplete: move }); };
+        move();
+    });
+
+    window.addEventListener("mousemove", e => { gsap.to(follower, { x: e.clientX, y: e.clientY, duration: 0.1 }); });
+
+    window.addEventListener("mousedown", e => {
+        if (e.target.id === 'close-btn') { closeResponse(); return; }
+        if (aiResponseDiv.contains(e.target)) return;
+        if (e.target.tagName !== 'INPUT') {
+            dialog.style.display = 'block';
+            gsap.fromTo(dialog, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, left: e.clientX + 10, top: e.clientY + 10, duration: 0.4, ease: "back.out(1.7)" });
+            setTimeout(() => mainInput.focus(), 50);
+        }
+    });
+
+    mainInput.addEventListener("keydown", async e => {
+        if (e.key === "Enter") {
+            const prompt = mainInput.value;
+            if (!prompt) return;
+
+            mainInput.disabled = true;
+            aiText.innerHTML = "<span style='opacity:0.5'>正在從雲端讀取 opeco 的記憶...</span>";
+            gsap.to(aiResponseDiv, { opacity: 1, y: 0, duration: 0.5 });
+
+            try {
+                // 1. 抓取 GitHub 人格設定 (加上快取破解)
+                let opecoSpirit = "你是 opeco，一個冷淡且優雅的靈魂。"; // 設定一個預設值，以防 GitHub 抓取失敗
+                try {
+                    const personalityRes = await fetch(PERSONALITY_URL + '?t=' + Date.now());
+                    if (personalityRes.ok) {
+                        opecoSpirit = await personalityRes.text();
+                    } else {
+                        console.warn("無法從 GitHub 獲取人格，使用預設值");
+                    }
+                } catch (githubErr) {
+                    console.error("GitHub 抓取失敗:", githubErr);
+                }
+
+                // 2. 呼叫 Hugging Face API
+                const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL_ID}/v1/chat/completions`, {
+                    method: "POST",
+                    headers: { 
+                        "Authorization": `Bearer ${HF_TOKEN}`, 
+                        "Content-Type": "application/json" 
+                    },
+                    body: JSON.stringify({
+                        model: MODEL_ID,
+                        messages: [
+                            { role: "system", content: opecoSpirit },
+                            { role: "user", content: prompt }
+                        ],
+                        temperature: 0.75,
+                        max_tokens: 250
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error || `HTTP 錯誤 ${response.status}`);
+                }
+
+                const data = await response.json();
+                aiText.innerText = data.choices[0].message.content;
+                startTimer();
+                closeBtn.style.opacity = "1";
+
+            } catch (err) {
+                // 這裡會顯示具體的錯誤原因
+                console.error("完整錯誤資訊:", err);
+                aiText.innerText = "opeco 遭遇了干擾：" + err.message;
+            } finally {
+                mainInput.value = "";
+                mainInput.disabled = false;
+                gsap.to(dialog, { scale: 0, opacity: 0, onComplete: () => dialog.style.display = 'none' });
+            }
+        }
+    });
+</script>
+</body>
+</html>

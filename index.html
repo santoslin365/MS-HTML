@@ -1,197 +1,565 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>玩家 特質人格分析 | 開始</title>
+    <title>opeco - Gemini 1.5 Flash</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
-        /* --- 基礎設定 --- */
-        * {
+        /* 視覺完全保留你最愛的「版本一」，但質感大升級 */
+        body,
+        html {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-            background-size: 400% 400%;
-            animation: gradient 15s ease infinite;
-            min-height: 100vh;
+            width: 100%;
+            height: 100vh;
+            background-color: #000;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
-        }
-        
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            /* 確保字體優先級 */
         }
 
-        .container {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 40px;
-            width: 100%;
+        .orb {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            mix-blend-mode: screen;
+            opacity: 0.5;
+            will-change: transform;
+        }
+
+        .orb-1 {
+            background: linear-gradient(45deg, #ff00ea, #00d2ff);
+            top: -10%;
+            left: -10%;
+        }
+
+        .orb-2 {
+            background: linear-gradient(45deg, #00ff88, #ff0055);
+            bottom: -10%;
+            right: -10%;
+        }
+
+        .orb-3 {
+            background: linear-gradient(45deg, #ffcc00, #0066ff);
+            top: 50%;
+            left: 50%;
+        }
+
+        #center-image {
+            position: relative;
             max-width: 500px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 0.8s ease-out;
+            z-index: 5;
+            mix-blend-mode: lighten;
+            pointer-events: none;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* 呼吸燈效動畫 */
+        @keyframes border-pulse {
+            0% {
+                border-color: rgba(0, 255, 136, 0.3);
+                box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+            }
+
+            50% {
+                border-color: rgba(0, 255, 136, 0.8);
+                box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+            }
+
+            100% {
+                border-color: rgba(0, 255, 136, 0.3);
+                box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+            }
         }
 
-        .logo { text-align: center; margin-bottom: 25px; }
-        .main-icon { width: 100px; height: 100px; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; }
-        .main-icon img { width: 100%; height: 100%; object-fit: contain; }
-
-        h1 { color: #2c3e50; text-align: center; margin-bottom: 10px; font-size: 28px; }
-        .subtitle { color: #7f8c8d; text-align: center; margin-bottom: 30px; font-size: 16px; }
-
-        .form-group { margin-bottom: 25px; text-align: left; }
-        label { display: flex; align-items: center; margin-bottom: 8px; color: #34495e; font-weight: 600; font-size: 15px; }
-
-        input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s;
+        /* 輸入對話框 (Input Dialog) */
+        #input-dialog {
+            position: fixed;
+            display: none;
+            background: rgba(20, 20, 20, 0.6);
+            /* 深色半透明底 */
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 24px;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
         }
 
-        input:focus {
-            outline: none;
-            border-color: #6a11cb;
-            box-shadow: 0 0 0 3px rgba(106, 17, 203, 0.1);
+        #input-dialog:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
         }
 
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        #input-dialog input {
+            padding: 14px 24px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
             color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 600;
+            outline: none;
+            width: 320px;
+            font-size: 16px;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        #input-dialog input:focus {
+            background: rgba(0, 0, 0, 0.6);
+            border-color: rgba(0, 210, 255, 0.6);
+            /* 聚焦時呈現科技藍 */
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+
+        /* AI 回覆框 (Response Box) */
+        #ai-response {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            max-width: 90vw;
+            max-height: 30vh;
+            overflow-y: auto;
+
+            /* Glassmorphism 2.0 */
+            background: rgba(30, 30, 35, 0.75);
+            /* 稍微深一點的背景讓字更清楚 */
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+            /* 頂部高光 */
+
+            padding: 35px 45px;
+            border-radius: 32px;
+            color: #eee;
+            font-size: 1.15rem;
+            line-height: 1.8;
+            /* 增加行更易讀 */
+            letter-spacing: 0.05em;
+
+            z-index: 100;
+            opacity: 0;
+            pointer-events: auto;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* 處理中狀態的樣式 class */
+        #ai-response.processing {
+            animation: border-pulse 2s infinite ease-in-out;
+            background: rgba(30, 30, 35, 0.85);
+            /* 運算時背景稍微加深 */
+        }
+
+        #close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 28px;
+            /* 稍微加大 */
+            height: 28px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
+            opacity: 0;
+            transition: 0.3s;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(106, 17, 203, 0.3);
+        #ai-response:hover #close-btn {
+            opacity: 1;
         }
 
-        .hint { font-size: 13px; color: #95a5a6; margin-top: 5px; display: block; }
-        .footer { text-align: center; margin-top: 25px; color: #7f8c8d; font-size: 14px; }
+        #close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            transform: rotate(90deg);
+            /* 互動微動畫 */
+        }
 
-        /* 驗證視覺反饋 */
-        input:valid { border-color: #23d5ab; }
-        input:invalid:not(:placeholder-shown) { border-color: #e73c7e; }
+        #cursor-follower {
+            position: fixed;
+            width: 8px;
+            /* 稍微精緻化 */
+            height: 8px;
+            background-color: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 999;
+            transform: translate(-50%, -50%);
+            left: 0;
+            top: 0;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            mix-blend-mode: difference;
+            /* 讓鼠標在亮背景也能看見 */
+        }
+
+        /* 捲軸美化 */
+        #ai-response::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #ai-response::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #ai-response::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        #ai-response::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
     </style>
 </head>
+
 <body>
-    
-    <div class="container">
-        <div class="logo">
-            <div class="main-icon">
-                <img src="images/logo.png" alt="星座人格分析系統">
-            </div>
-            <h1>玩家 特質人格分析</h1>
-            <p class="subtitle">透過生日與簡單問答，探索您的人格解析與怪物彈珠適正的角色匹配</p>
-        </div>
 
-        <form id="startForm" action="quiz.html" method="GET">
-            <div class="form-group">
-                <label for="playerId">玩家 ID</label>
-                <input type="text" id="playerId" name="playerId" 
-                       placeholder="請輸入您的遊戲ID" 
-                       required minlength="3" maxlength="10"
-                       pattern="[A-Za-z0-9\u4e00-\u9fa5]+"
-                       title="請輸入3-10個字元，可使用中文、英文或數字">
-                <span class="hint">3-10個字元，可使用中文、英文或數字</span>
-            </div>
-
-            <div class="form-group">
-                <label for="playerNumber">怪物彈珠 遊戲UID</label>
-                <input type="text" id="playerNumber" name="playerNumber" 
-                       placeholder="請輸入9位數字UID" 
-                       required maxlength="9"
-                       title="請輸入9位數字">
-                <span class="hint">請輸入9位數的遊戲UID（例如：123456789）</span>
-            </div>
-
-            <div class="form-group">
-                <label for="birthday">出生日期</label>
-                <input type="date" id="birthday" name="birthday" 
-                       required min="1900-01-01" max="2024-12-31">
-                <span class="hint">我們將根據您的生日來匹配適合的怪物彈珠角色</span>
-            </div>
-
-            <button type="submit">開始分析之旅</button>
-        </form>
-
-        <div class="footer">
-            <p>您的資料僅用於本次分析，不會被使用於其它用途</p>
-            <p>分析結果僅供娛樂參考</p>
-        </div>
+    <div class="orb-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
     </div>
+    <img src="logo.png" id="center-image" alt="Logo">
+    <div id="ai-response">
+        <div id="close-btn">✕</div>
+        <div id="ai-text"></div>
+    </div>
+    <div id="cursor-follower"></div>
+    <div id="input-dialog"><input type="text" placeholder="" id="main-input"></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- 1. 設定生日預設值 ---
-            const today = new Date();
-            const defaultDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-            document.getElementById('birthday').value = defaultDate.toISOString().split('T')[0];
-            
-            // --- 2. 玩家編號：即時攔截非數字內容 (核心修正處) ---
-            const playerNumberInput = document.getElementById('playerNumber');
-            playerNumberInput.addEventListener('input', function() {
-                // 如果偵測到非數字字元
-                if (/\D/g.test(this.value)) {
-                    alert('遊戲UID僅能輸入數字！');
-                    // 立即移除所有非數字字元
-                    this.value = this.value.replace(/\D/g, '');
-                }
+        // --- 基本配置 ---
+        const KEY = "AIzaSyAwGaQZCMkbvL9sx0Ym2qF0Q1JC49-P8A8";
+        const MODEL = "gemini-3-flash-preview";
+        const SPIRIT_FILE = "./opeco.txt";
+
+        const dialog = document.querySelector('#input-dialog');
+        const mainInput = document.querySelector('#main-input');
+        const aiResponseDiv = document.querySelector('#ai-response');
+        const aiText = document.querySelector('#ai-text');
+
+        // 狀態管理
+        const STEPS = {
+            START: 0,
+            NICKNAME: 1,
+            UID: 2,
+            INTRO: 3,
+            BIRTHDAY: 4,
+            TIME: 5
+        };
+        let currentStep = STEPS.START;
+
+        // --- 讀取性格設定 ---
+        let systemPrompt = "";
+        fetch(SPIRIT_FILE)
+            .then(response => response.text())
+            .then(text => {
+                systemPrompt = text
+                    .replace(/^PARAMETER.*\n/gm, "")
+                    .replace(/SYSTEM """/, "")
+                    .replace(/"""$/, "")
+                    .trim();
+                console.log("Opeco loaded.");
+            })
+            .catch(err => console.error("Failed to load spirit file:", err));
+
+        // 背景與互動邏輯
+        let orbSpeed = 1;
+        document.querySelectorAll('.orb').forEach((orb, i) => {
+            const move = () => { gsap.to(orb, { x: (Math.random() - 0.5) * window.innerWidth, y: (Math.random() - 0.5) * window.innerHeight, duration: (7 + i * 3) / orbSpeed, ease: "sine.inOut", onComplete: move }); };
+            move();
+        });
+        window.addEventListener("mousemove", e => { gsap.to('#cursor-follower', { x: e.clientX, y: e.clientY, duration: 0.1 }); });
+
+        // 關閉按鈕
+        document.getElementById('close-btn').addEventListener("click", () => {
+            gsap.to(aiResponseDiv, { opacity: 0, y: 30 });
+            clearTimeout(autoHideTimer);
+        });
+
+        // 點擊背景移動輸入框 (恢復舊版功能)
+        window.addEventListener("mousedown", e => {
+            // 如果點擊的是按鈕、輸入框本身或 AI 回覆框，不移動
+            if (e.target.closest('button') ||
+                e.target.closest('input') ||
+                e.target.closest('#ai-response') ||
+                e.target.closest('.action-btn')) return;
+
+            // 確保只有在需要輸入的時候才允許移動 (可選，但為了自由度先全開)
+            // if (dialog.style.display !== 'block') return; 
+
+            // 移動對話框到滑鼠位置
+            gsap.to(dialog, {
+                left: e.clientX + 10,
+                top: e.clientY + 10,
+                scale: 1,
+                opacity: 1,
+                duration: 0.4,
+                ease: "power2.out"
             });
 
-            // --- 3. 表單提交前的最終檢查 ---
-            document.getElementById('startForm').addEventListener('submit', function(e) {
-                const playerId = document.getElementById('playerId').value.trim();
-                const playerNumber = document.getElementById('playerNumber').value.trim();
-                const birthday = document.getElementById('birthday').value;
-                
-                // 驗證玩家ID
-                const playerIdRegex = /^[A-Za-z0-9\u4e00-\u9fa5]{3,10}$/;
-                if (!playerIdRegex.test(playerId)) {
-                    alert('玩家ID必須是3-10個字元，且只能包含中文、英文或數字');
-                    e.preventDefault();
-                    return;
-                }
-                
-                // 驗證玩家編號 (必須剛好 9 位)
-                if (playerNumber.length !== 9) {
-                    alert('遊戲UID必須剛好是9位數字');
-                    e.preventDefault();
-                    return;
-                }
-                
-                // 顯示過場效果
-                const button = document.querySelector('button');
-                button.innerHTML = '準備中...';
-                button.disabled = true;
-            });
+            // 確保對話框顯示 (如果它是隱藏的)
+            if (dialog.style.display === 'none') {
+                dialog.style.display = 'block';
+            }
+
+            mainInput.focus();
         });
+
+        // 自動隱藏邏輯
+        let autoHideTimer;
+        function typeWriter(text) {
+            let i = 0;
+            aiText.innerHTML = "";
+            gsap.to(aiResponseDiv, { opacity: 1, y: 0, duration: 0.5 });
+
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    const char = text.charAt(i);
+                    aiText.innerHTML += (char === '\n' ? '<br>' : char);
+                    i++;
+                    aiResponseDiv.scrollTop = aiResponseDiv.scrollHeight;
+                } else {
+                    clearInterval(interval);
+                    orbSpeed = 1;
+                    startAutoHide();
+                }
+            }, 30);
+        }
+
+        function startAutoHide() {
+            clearTimeout(autoHideTimer);
+            // 在某些關鍵步驟，我們不希望字太快消失，只有閒置時才消失
+            autoHideTimer = setTimeout(() => {
+                // 如果是對話框還在顯示，淡出
+                // 但如果是在 INTRO 階段，我們可能想讓它留久一點，這裡先保持統一 15秒
+                gsap.to(aiResponseDiv, { opacity: 0, y: 30 });
+            }, 15000);
+        }
+
+        aiResponseDiv.addEventListener('mouseenter', () => clearTimeout(autoHideTimer));
+        aiResponseDiv.addEventListener('mouseleave', () => startAutoHide());
+
+
+        // --- 核心流程 ---
+
+        // 1. 自動開場
+        window.onload = () => {
+            setTimeout(() => {
+                // 模擬 AI 說話
+                const greeting = "嗶嗶，訊號掃描中，掃描到你(玩家)，出現在我的面前了。\n請告訴歐佩可，你的「怪物彈珠」遊戲暱稱，這樣你才能當歐佩可的經紀人哦！";
+                typeWriter(greeting);
+
+                // 顯示輸入框
+                setTimeout(() => {
+                    showInput("請輸入【怪物彈珠】遊戲暱稱 (10字內)");
+                    currentStep = STEPS.NICKNAME;
+                }, 2000);
+            }, 1000);
+        };
+
+        function showInput(placeholder) {
+            dialog.style.display = 'block';
+            mainInput.placeholder = placeholder;
+            mainInput.value = "";
+            mainInput.disabled = false;
+
+            // 讓輸入框出現在合適位置 (例如中央下方)
+            gsap.fromTo(dialog,
+                { scale: 0.8, opacity: 0, left: window.innerWidth / 2 - 180, top: window.innerHeight - 150 },
+                { scale: 1, opacity: 1, duration: 0.4 }
+            );
+            setTimeout(() => mainInput.focus(), 50);
+        }
+
+        // 2. 輸入處理
+        mainInput.addEventListener("keydown", async e => {
+            if (e.key === "Enter" && mainInput.value) {
+                const userInput = mainInput.value.trim();
+
+                // 驗證流程
+                if (currentStep === STEPS.NICKNAME) {
+                    // 驗證暱稱：10字元內
+                    if (userInput.length > 10) {
+                        typeWriter("嗶嗶！暱稱太長了啦！請輸入 10 個字元以內的名字哦。");
+                        return; // 不清空輸入框，讓使用者修改
+                    }
+                    // 儲存並進入下一步
+                    sessionStorage.setItem('opeco_nickname', userInput);
+                    hideInput();
+
+                    typeWriter(`收到！${userInput} 經紀人。接下來，請告訴我你的遊戲 UID。`);
+                    setTimeout(() => {
+                        showInput("請輸入【怪物彈珠】遊戲UID (9位數字)");
+                        currentStep = STEPS.UID;
+                    }, 1500);
+                    return;
+                }
+
+                if (currentStep === STEPS.UID) {
+                    // 驗證 UID：9位數字
+                    const uidRegex = /^\d{9}$/;
+                    if (!uidRegex.test(userInput)) {
+                        typeWriter("嗶嗶！格式錯誤！UID 必須是「9位數字」哦。");
+                        return;
+                    }
+                    // 儲存並進入下一步
+                    sessionStorage.setItem('opeco_uid', userInput);
+                    hideInput();
+
+                    // 進入過場解說
+                    currentStep = STEPS.INTRO;
+                    playIntroSequence();
+                    return;
+                }
+
+                // 生日與時間流程 (需要 AI 判斷)
+                if (currentStep === STEPS.BIRTHDAY || currentStep === STEPS.TIME) {
+                    handleAIInteraction(userInput);
+                }
+            }
+        });
+
+        function hideInput() {
+            gsap.to(dialog, { scale: 0, opacity: 0, onComplete: () => dialog.style.display = 'none' });
+            mainInput.disabled = true;
+        }
+
+        function playIntroSequence() {
+            // AI 介紹 (保留 10 秒)
+            const introText = "資料鎖定完畢！\n\n這個網頁主要是幫經紀人進行「星座運勢」與「個性頻譜」的分析。\n歐佩可會掃描你的靈魂數據，並生成專屬的分析報告...";
+            typeWriter(introText);
+
+            // 10秒後詢問生日
+            setTimeout(() => {
+                typeWriter("準備好了嗎？\n首先，請告訴我你的「出生年月日」，讓我連結你的星盤數據。");
+                setTimeout(() => {
+                    showInput("請輸入生日 (例如 19900101)");
+                    currentStep = STEPS.BIRTHDAY;
+                }, 1500);
+            }, 10000); // 10秒延遲
+        }
+
+        // 3. AI 串接 (處理生日與時間)
+        let chatHistory = [];
+        async function handleAIInteraction(userText) {
+            hideInput();
+
+            // 視覺: 思考中
+            orbSpeed = 4;
+            aiResponseDiv.classList.add('processing');
+            aiText.innerHTML = "<span style='opacity:0.8; color:#00ff88; animation: pulse 0.5s infinite'>嗶嗶，資料掃描分析中...</span>";
+
+            // 呼叫 API
+            const responseText = await callGemini(userText);
+
+            aiResponseDiv.classList.remove('processing');
+            typeWriter(responseText);
+        }
+
+        async function callGemini(userMessage) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${KEY}`;
+
+            // 動態附加 Prompt，確保 AI 知道現在要幹嘛
+            let contextInstruction = "";
+            if (currentStep === STEPS.BIRTHDAY) {
+                contextInstruction = "(系統提示：使用者正在輸入生日。請判斷是否為有效日期。若是，請回應「收到生日」，並詢問出生時間(幾點? 白天或晚上?)。若否，請引導重新輸入。)";
+            } else if (currentStep === STEPS.TIME) {
+                contextInstruction = "(系統提示：使用者正在輸入出生時間。請判斷是否能推算出星座命盤。若資訊足夠，請回應「數據鎖定完成」，並準備跳轉。)";
+            }
+
+            const activeHistory = [
+                ...chatHistory,
+                // 為了讓 AI 記住前面的設定，我們可以在這裡偷偷塞入 User 的暱稱與 UID 資訊 (可選)
+                { role: "user", parts: [{ text: `目前狀態: ${contextInstruction}\n使用者輸入: ${userMessage}` }] }
+            ];
+
+            const payload = {
+                contents: activeHistory,
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: { temperature: 0.88, maxOutputTokens: 1000 }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
+
+                const aiResponse = data.candidates[0].content.parts[0].text;
+
+                // 記錄對話
+                chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+                chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+
+                // 邏輯判斷是否推進步驟
+                if (currentStep === STEPS.BIRTHDAY) {
+                    // 簡單判斷：如果 AI 的回應包含 "時間" 關鍵字，通常代表生日 OK 了，在問時間
+                    // 為了更準確，我們可以用 Regex 抓 AI 是否說 "收到" 或 "確認"
+                    // 這裡先簡單處理：只要 AI 有回應，我們就假設它處理了，但為了保險，我們強制切換步驟
+                    // *更好的做法*：讓 AI 輸出 JSON，但現在先用關鍵字
+                    if (aiResponse.includes("時間") || aiResponse.includes("點")) {
+                        setTimeout(() => {
+                            showInput("請輸入出生時間 (0-23或時辰)");
+                            currentStep = STEPS.TIME;
+                        }, 2000);
+                    } else {
+                        // AI 可能在糾正日期，保持在 Birthday 步驟
+                        setTimeout(() => {
+                            showInput("請重新輸入生日");
+                        }, 2000);
+                    }
+                } else if (currentStep === STEPS.TIME) {
+                    // 檢查跳轉
+                    const redirectRegex = /數據鎖定|鎖定完成|Data Locked/i;
+                    if (redirectRegex.test(aiResponse)) {
+                        sessionStorage.setItem('opeco_history', JSON.stringify(chatHistory));
+                        sessionStorage.setItem('opeco_system', systemPrompt);
+
+                        setTimeout(() => {
+                            gsap.to("body", {
+                                opacity: 0, duration: 1, onComplete: () => {
+                                    window.location.href = 'QA.html';
+                                }
+                            });
+                        }, 3000);
+                    } else {
+                        // AI 可能還在確認時間
+                        setTimeout(() => {
+                            showInput("請繼續輸入時間資訊");
+                        }, 2000);
+                    }
+                }
+
+                return aiResponse;
+
+            } catch (error) {
+                console.error("API Error:", error);
+                return `(系統警報) 連線中斷...${error.message}`;
+            }
+        }
     </script>
 </body>
+
 </html>

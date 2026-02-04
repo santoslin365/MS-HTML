@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>opeco - 靈魂頻譜分析結果</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        /* 繼承版本一經典視覺與質感 UI */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            color: #fff;
+        }
+
+        .orb {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            mix-blend-mode: screen;
+            opacity: 0.5;
+            will-change: transform;
+        }
+
+        .orb-1 {
+            background: linear-gradient(45deg, #ff00ea, #00d2ff);
+            top: -10%;
+            left: -10%;
+        }
+
+        .orb-2 {
+            background: linear-gradient(45deg, #00ff88, #ff0055);
+            bottom: -10%;
+            right: -10%;
+        }
+
+        .orb-3 {
+            background: linear-gradient(45deg, #ffcc00, #0066ff);
+            top: 50%;
+            left: 50%;
+        }
+
+        /* 結果卡片容器 */
+        #result-card {
+            position: relative;
+            width: 500px;
+            max-width: 90vw;
+            padding: 50px 40px;
+            text-align: center;
+
+            /* Glassmorphism */
+            background: rgba(30, 30, 35, 0.75);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 32px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+
+            opacity: 0;
+            transform: translateY(20px);
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 20px;
+            font-weight: normal;
+        }
+
+        /* 總分顯示 */
+        #score-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #score-value {
+            font-size: 6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        #score-label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: -10px;
+            display: block;
+        }
+
+        /* 原型結果 */
+        #archetype-title {
+            font-size: 2.2rem;
+            margin: 20px 0 10px 0;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+            opacity: 0;
+        }
+
+        #archetype-desc {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+            opacity: 0;
+        }
+
+        /* 重新開始按鈕 */
+        .restart-btn {
+            display: inline-block;
+            padding: 12px 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            opacity: 0;
+        }
+
+        .restart-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="orb-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div id="result-card">
+        <h1>靈魂頻譜分析完成</h1>
+
+        <div id="player-info" style="margin-bottom: 20px; font-size: 0.9rem; color: #00ff88; opacity: 0.8;">
+            <div id="player-nickname"></div>
+            <div id="player-uid" style="font-size: 0.8rem; color: #888;"></div>
+        </div>
+
+        <div id="score-container">
+            <div id="score-value">0</div>
+            <span id="score-label">SYNC RATIO</span>
+        </div>
+
+        <div id="archetype-title">載入中...</div>
+        <div id="archetype-desc">正在解碼您的靈魂數據...</div>
+
+        <div class="restart-btn" onclick="restart()">重新連線</div>
+    </div>
+
+    <script>
+        // 1. 動畫背景
+        let orbSpeed = 0.5; // 慢速流動
+        document.querySelectorAll('.orb').forEach((orb, i) => {
+            const move = () => { gsap.to(orb, { x: (Math.random() - 0.5) * window.innerWidth, y: (Math.random() - 0.5) * window.innerHeight, duration: (10 + i * 5) / orbSpeed, ease: "sine.inOut", onComplete: move }); };
+            move();
+        });
+
+        // 2. 讀取分數與邏輯
+        const totalScore = parseInt(sessionStorage.getItem('opeco_total_score') || 0);
+        const nickname = sessionStorage.getItem('opeco_nickname') || "經紀人";
+        const uid = sessionStorage.getItem('opeco_uid') || "Unknown";
+
+        // 更新玩家資訊
+        document.getElementById('player-nickname').innerText = `經紀人：${nickname}`;
+        document.getElementById('player-uid').innerText = `UID: ${uid}`;
+
+        let archetype = { title: "", desc: "", color: "" };
+
+        // 靈魂原型邏輯
+        if (totalScore >= 24) {
+            archetype = {
+                title: "【 恆星 Stellar 】",
+                desc: "您的靈魂如同恆星般燃燒，充滿主動性與創造力。您不等待光芒，因為您就是光芒本身。",
+                color: "#ffcc00"
+            };
+        } else if (totalScore >= 14) {
+            archetype = {
+                title: "【 星雲 Nebula 】",
+                desc: "您擁有海納百川的包容力，如同星雲般孕育無限可能。您的強大在於適應與轉化，而非對抗。",
+                color: "#00d2ff"
+            };
+        } else {
+            archetype = {
+                title: "【 黑洞 Black Hole 】",
+                desc: "深邃、神秘且擁有不可抗拒的引力。您不輕易顯露情感，但內心卻擁有最強大的意志核心。",
+                color: "#a900ff"
+            };
+        }
+
+        // 3. 進場與數字動畫
+        window.onload = () => {
+            // 卡片進場
+            gsap.to("#result-card", { opacity: 1, y: 0, duration: 1, ease: "power3.out" });
+
+            // 數字跑動
+            const scoreObj = { val: 0 };
+            gsap.to(scoreObj, {
+                val: totalScore,
+                duration: 2,
+                ease: "power2.out",
+                onUpdate: () => {
+                    document.getElementById("score-value").innerText = Math.round(scoreObj.val);
+                },
+                onComplete: () => {
+                    showArchetype();
+                }
+            });
+        };
+
+        function showArchetype() {
+            const titleEl = document.getElementById("archetype-title");
+            const descEl = document.getElementById("archetype-desc");
+            const restartBtn = document.querySelector(".restart-btn");
+
+            titleEl.innerText = archetype.title;
+            titleEl.style.color = archetype.color;
+            titleEl.style.textShadow = `0 0 30px ${archetype.color}`;
+
+            descEl.innerText = archetype.desc;
+
+            // 依序淡入
+            gsap.to(titleEl, { opacity: 1, y: -5, duration: 0.8, delay: 0 });
+            gsap.to(descEl, { opacity: 1, y: -5, duration: 0.8, delay: 0.3 });
+            gsap.to(restartBtn, { opacity: 1, y: 0, duration: 0.8, delay: 0.8 });
+        }
+
+        function restart() {
+            // 清除資料
+            sessionStorage.removeItem('opeco_history');
+            sessionStorage.removeItem('opeco_system');
+            sessionStorage.removeItem('opeco_total_score');
+            sessionStorage.removeItem('opeco_nickname');
+            sessionStorage.removeItem('opeco_uid');
+
+            // 淡出效果
+            gsap.to("body", {
+                opacity: 0, duration: 1, onComplete: () => {
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+
+    </script>
+</body>
+
+</html>

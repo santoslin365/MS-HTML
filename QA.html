@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>opeco - 引導模式</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <style>
+        /* 繼承版本一經典視覺，並同步質感升級 */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background-color: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        .orb {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            filter: blur(120px);
+            mix-blend-mode: screen;
+            opacity: 0.5;
+            will-change: transform;
+        }
+
+        .orb-1 {
+            background: linear-gradient(45deg, #ff00ea, #00d2ff);
+            top: -10%;
+            left: -10%;
+        }
+
+        .orb-2 {
+            background: linear-gradient(45deg, #00ff88, #ff0055);
+            bottom: -10%;
+            right: -10%;
+        }
+
+        .orb-3 {
+            background: linear-gradient(45deg, #ffcc00, #0066ff);
+            top: 50%;
+            left: 50%;
+        }
+
+        /* 呼吸燈效動畫 */
+        @keyframes border-pulse {
+            0% {
+                border-color: rgba(0, 255, 136, 0.3);
+                box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+            }
+
+            50% {
+                border-color: rgba(0, 255, 136, 0.8);
+                box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+            }
+
+            100% {
+                border-color: rgba(0, 255, 136, 0.3);
+                box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+            }
+        }
+
+        /* 回覆框：位於中央稍微偏下 */
+        #ai-response {
+            position: fixed;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            max-width: 90vw;
+            max-height: 40vh;
+            overflow-y: auto;
+
+            /* Glassmorphism 2.0 */
+            background: rgba(30, 30, 35, 0.75);
+            backdrop-filter: blur(40px) saturate(150%);
+            -webkit-backdrop-filter: blur(40px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.25);
+
+            padding: 40px 50px;
+            border-radius: 32px;
+            color: #eee;
+            font-size: 1.25rem;
+            /* 字體稍微加大 */
+            line-height: 1.8;
+            letter-spacing: 0.05em;
+
+            z-index: 100;
+            opacity: 0;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* 處理中狀態 */
+        #ai-response.processing {
+            animation: border-pulse 2s infinite ease-in-out;
+            background: rgba(30, 30, 35, 0.85);
+        }
+
+        /* 輸入對話框 */
+        #input-dialog {
+            position: fixed;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 20px;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        #input-dialog input {
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            outline: none;
+            width: 350px;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        #input-dialog input:focus {
+            background: rgba(0, 0, 0, 0.6);
+            border-color: rgba(0, 210, 255, 0.6);
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+        }
+
+        /* 捲軸樣式優化 */
+        #ai-response::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #ai-response::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #ai-response::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        #ai-response::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 按鈕樣式 */
+        .action-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 40px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.5);
+            color: #00ff88;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+        }
+
+        .action-btn:hover {
+            background: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+            transform: scale(1.05);
+            color: #fff;
+            border-color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="orb-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div id="ai-response">
+        <div id="ai-text"></div>
+    </div>
+
+    <div id="input-dialog">
+        <input type="text" placeholder="回答 opeco..." id="main-input">
+    </div>
+
+    <script>
+        // --- 基本配置 ---
+        const KEY = "AIzaSyAwGaQZCMkbvL9sx0Ym2qF0Q1JC49-P8A8";
+        const MODEL = "gemini-3-flash-preview";
+
+        // 從 sessionStorage 讀取繼承的資料
+        const savedHistory = sessionStorage.getItem('opeco_history');
+        const savedSystemPrompt = sessionStorage.getItem('opeco_system');
+
+        let chatHistory = savedHistory ? JSON.parse(savedHistory) : [];
+        let systemPrompt = savedSystemPrompt || "";
+
+        const aiResponseDiv = document.querySelector('#ai-response');
+        const aiText = document.querySelector('#ai-text');
+        const inputDialog = document.querySelector('#input-dialog');
+        const mainInput = document.querySelector('#main-input');
+
+        let orbSpeed = 1;
+
+        // 1. 背景光圈動畫 (版本一)
+        document.querySelectorAll('.orb').forEach((orb, i) => {
+            const move = () => { gsap.to(orb, { x: (Math.random() - 0.5) * window.innerWidth, y: (Math.random() - 0.5) * window.innerHeight, duration: (7 + i * 3) / orbSpeed, ease: "sine.inOut", onComplete: move }); };
+            move();
+        });
+
+        // 2. 打字機效果 (升級版：支援 HTML 換行)
+        function typeWriter(text, callback) {
+            let i = 0;
+            aiText.innerHTML = "";
+
+            // 確保顯示
+            gsap.to(aiResponseDiv, { opacity: 1, y: 0, duration: 0.5 });
+
+            const interval = setInterval(() => {
+                if (i < text.length) {
+                    const char = text.charAt(i);
+                    aiText.innerHTML += (char === '\n' ? '<br>' : char);
+                    i++;
+                    aiResponseDiv.scrollTop = aiResponseDiv.scrollHeight;
+                } else {
+                    clearInterval(interval);
+                    if (callback) callback();
+                }
+            }, 30);
+        }
+
+        // 3. API 呼叫邏輯 (繼承自 index.html)
+        async function callGemini(userMessage) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${KEY}`;
+
+            const contents = [
+                ...chatHistory,
+                { role: "user", parts: [{ text: userMessage }] }
+            ];
+
+            const payload = {
+                contents: contents,
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    temperature: 0.88,
+                    maxOutputTokens: 4096
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.message);
+
+                const aiResponse = data.candidates[0].content.parts[0].text;
+
+                chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+                chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
+
+                return aiResponse;
+
+            } catch (error) {
+                console.error("API Error:", error);
+                return `(系統警報) 連線中斷...錯誤訊息：${error.message}`;
+            }
+        }
+
+        // 4. 流程啟動
+        // 題目資料庫
+        const qaQuestions = [
+            {
+                title: "題目 1：【酒館的破冰者】",
+                context: "你推開神祕酒館『星火屋』的大門，裡面正進行著熱鬧的慶祝，有人在跳舞，有人在爭論。你會如何安置自己？",
+                focus: "側重：主動性與觀察力"
+            },
+            {
+                title: "題目 2：【迷霧中的分岔路】",
+                context: "你來到了一片終年不散的迷霧森林，眼前出現了三條路：一條佈滿荊棘但有金光閃爍，一條開滿奇異花朵且芬芳撲鼻，一條則是平整卻看不到盡頭的石路。你會？",
+                focus: "側重：行動動機"
+            },
+            {
+                title: "題目 3：【許願池的倒影】",
+                context: "你來到傳說中能映照靈魂的『真理之泉』，泉水告訴你，只要你願意投入一顆代表你靈魂的晶石，它能讓你立刻獲得一個永恆的恩賜。你最希望那是？",
+                focus: "側重：生命核心追求"
+            }
+        ];
+
+        let currentQIndex = 0;
+        let totalScore = 0;
+
+        window.onload = async () => {
+            // 淡入效果
+            gsap.from("body", { opacity: 0, duration: 1 });
+
+            // 1. 播放開場白
+            typeWriter("接下來要進入個性分析的環節...", () => {
+                // 顯示開始按鈕
+                const btn = document.createElement('div');
+                btn.className = 'action-btn';
+                btn.innerText = '開始分析';
+                btn.onclick = () => {
+                    // 按下後淡出按鈕
+                    gsap.to(btn, {
+                        opacity: 0, scale: 0.8, duration: 0.3, onComplete: () => {
+                            btn.remove();
+                            // 2. 開始第一題
+                            startQuestion(0);
+                        }
+                    });
+                };
+
+                aiText.appendChild(document.createElement('br'));
+                aiText.appendChild(btn);
+
+                // 按鈕淡入動畫
+                gsap.from(btn, { opacity: 0, y: 20, duration: 0.8, ease: "back.out(1.7)" });
+            });
+        };
+
+        function startQuestion(index) {
+            const q = qaQuestions[index];
+
+            // 組合題目文字
+            const questionHtml = `
+                <div style="font-weight:bold; color:#00d2ff; margin-bottom:10px;">${q.title}</div>
+                <div style="margin-bottom:10px;">${q.context}</div>
+                <div style="font-size:0.9em; color:#888;">(${q.focus})</div>
+            `;
+
+            // 直接顯示 HTML 而非打字機效果，避免標籤外露
+            aiText.innerHTML = questionHtml;
+            gsap.fromTo(aiText, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 1 });
+
+            // 顯示輸入框
+            setTimeout(() => {
+                showInput();
+            }, 1000);
+        }
+
+        function showInput() {
+            inputDialog.style.display = 'block';
+            mainInput.disabled = false; // 關鍵修正：確保輸入框重新啟用
+            mainInput.focus();
+            gsap.fromTo(inputDialog, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5 });
+        }
+
+        // 5. 處理回答
+        mainInput.addEventListener("keydown", async (e) => {
+            if (e.key === "Enter" && mainInput.value) {
+                const userAns = mainInput.value;
+                mainInput.value = "";
+                mainInput.disabled = true;
+
+                // 隱藏輸入框
+                gsap.to(inputDialog, { opacity: 0, y: 20, onComplete: () => inputDialog.style.display = 'none' });
+
+                // 顯示思考中
+                aiResponseDiv.classList.add('processing'); // 啟動呼吸燈效
+                aiText.innerHTML = "<span style='opacity:0.8; color:#00ff88; animation: pulse 0.5s infinite'>嗶嗶，資料掃描分析中...</span>";
+
+                // 準備給 AI 的指令：評分 (不需回應)
+                const q = qaQuestions[currentQIndex];
+
+                // 明確告訴 AI 只要輸出分數，不要寫評語
+                // 加入 JSON 強制指令與評分標準：相關性高=高分，無關=低分
+                const nextInstruction = `(系統指令：使用者回答了第 ${currentQIndex + 1} 題：『${userAns}』。題目：『${q.context}』。
+                
+                請依據使用者回答與題目情境的『相關性』進行 1-10 分的評分：
+                1. 若回答與題目情境高度相關、符合邏輯或富有創意 -> 給予高分 (7-10 分)。
+                2. 若回答與題目完全無關、胡言亂語或不知所云 -> 給予低分 (1-3 分)。
+                
+                請 **務必** 僅輸出標準 JSON 格式，不要有Markdown標記，格式如下：
+                {"score": 數字, "reason": "簡短評語"}
+                )`;
+
+                // 呼叫 API 進行評分
+                try {
+                    // 我們預期 AI 回傳的是 JSON 字串
+                    let rawResponse = await callGemini(nextInstruction);
+
+                    // 清理可能存在的 Markdown code block 標記 (```json ... ```)
+                    rawResponse = rawResponse.replace(/```json/g, "").replace(/```/g, "").trim();
+
+                    console.log("Raw AI Response for Scoring (JSON):", rawResponse);
+
+                    // 解析 JSON
+                    const result = JSON.parse(rawResponse);
+
+                    // 停止呼吸燈效
+                    aiResponseDiv.classList.remove('processing');
+
+                    if (result && typeof result.score === 'number') {
+                        const score = result.score;
+                        totalScore += score;
+                        console.log(`Question ${currentQIndex + 1} Score: ${score}, Total: ${totalScore}, Reason: ${result.reason}`);
+                    } else {
+                        // JSON 解析成功但格式不對
+                        console.warn("JSON parsed but score missing. Fallback 5.");
+                        totalScore += 5;
+                    }
+
+                } catch (e) {
+                    console.error("Scoring failed (JSON parse error):", e);
+                    // 停止呼吸燈效 (防呆)
+                    aiResponseDiv.classList.remove('processing');
+                    // 保底分
+                    totalScore += 5;
+                }
+
+                // 評分完成，直接進入下一題 (不顯示 AI 的回應，因為我們要求它不回應)
+                currentQIndex++;
+                if (currentQIndex < qaQuestions.length) {
+                    // 模擬一點運算延遲感
+                    setTimeout(() => {
+                        startQuestion(currentQIndex);
+                    }, 1000);
+                } else {
+                    // 全部結束
+                    finishQuiz();
+                }
+            }
+        });
+
+        function finishQuiz() {
+            // 顯示結束語
+            aiText.innerHTML = "<span style='opacity:0.8; color:#00ff88; animation: pulse 0.5s infinite'>測驗結束，正在生成靈魂頻譜...</span>";
+
+            // 儲存總分
+            sessionStorage.setItem('opeco_total_score', totalScore);
+
+            setTimeout(() => {
+                gsap.to("body", {
+                    opacity: 0, duration: 2, onComplete: () => {
+                        window.location.href = 'print.html';
+                    }
+                });
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

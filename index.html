@@ -247,7 +247,7 @@
 
     <script>
         // --- 基本配置 ---
-        const KEY = "AIzaSyAwGaQZCMkbvL9sx0Ym2qF0Q1JC49-P8A8";
+        const KEY = "AIzaSyA_2rV7xsxaNlUDET_Ab9A4E6SOSx8p4tQ";
         const MODEL = "gemini-3-flash-preview";
         const SPIRIT_FILE = "./opeco.txt";
 
@@ -292,40 +292,58 @@
         // 關閉按鈕
         document.getElementById('close-btn').addEventListener("click", () => {
             gsap.to(aiResponseDiv, { opacity: 0, y: 30 });
-            clearTimeout(autoHideTimer);
         });
 
-        // 點擊背景移動輸入框 (恢復舊版功能)
+        // 點擊背景【原地】顯示輸入框
+        // 修正邏輯：不是移動過去，而是直接在該點完全重置出現
         window.addEventListener("mousedown", e => {
-            // 如果點擊的是按鈕、輸入框本身或 AI 回覆框，不移動
+            // 如果點擊的是按鈕、輸入框本身或 AI 回覆框，不處理
             if (e.target.closest('button') ||
                 e.target.closest('input') ||
                 e.target.closest('#ai-response') ||
                 e.target.closest('.action-btn')) return;
 
-            // 確保只有在需要輸入的時候才允許移動 (可選，但為了自由度先全開)
-            // if (dialog.style.display !== 'block') return; 
-
-            // 移動對話框到滑鼠位置
-            gsap.to(dialog, {
-                left: e.clientX + 10,
-                top: e.clientY + 10,
-                scale: 1,
-                opacity: 1,
-                duration: 0.4,
-                ease: "power2.out"
-            });
-
-            // 確保對話框顯示 (如果它是隱藏的)
-            if (dialog.style.display === 'none') {
-                dialog.style.display = 'block';
+            // 根據目前步驟決定 Placeholder
+            let ph = "";
+            switch (currentStep) {
+                case STEPS.NICKNAME: ph = "請輸入【怪物彈珠】遊戲暱稱 (10字內)"; break;
+                case STEPS.UID: ph = "請輸入【怪物彈珠】遊戲UID (9位數字)"; break;
+                case STEPS.BIRTHDAY: ph = "請輸入生日 (例如 19900101)"; break;
+                case STEPS.TIME: ph = "請輸入出生時間 (0-23或時辰)"; break;
+                default: ph = "輸入訊息...";
             }
 
-            mainInput.focus();
+            // 如果是在 INTRO 階段 (還在講話)，不顯示輸入框
+            if (currentStep === STEPS.INTRO) return;
+
+            showInputAt(ph, e.clientX, e.clientY);
         });
 
-        // 自動隱藏邏輯
-        let autoHideTimer;
+        function showInputAt(placeholder, x, y) {
+            // 邊界檢查: 防止超出螢幕
+            let targetX = x;
+            let targetY = y;
+            if (targetX > window.innerWidth - 340) targetX = window.innerWidth - 340;
+            if (targetY > window.innerHeight - 80) targetY = window.innerHeight - 80;
+
+            dialog.style.display = 'block';
+            dialog.style.left = targetX + 'px';
+            dialog.style.top = targetY + 'px';
+
+            mainInput.placeholder = placeholder;
+            mainInput.value = "";
+            mainInput.disabled = false;
+
+            // 彈出動畫 (原地放大 + 彈性效果)
+            gsap.fromTo(dialog,
+                { scale: 0.5, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.3, ease: "back.out(1.7)" }
+            );
+
+            setTimeout(() => mainInput.focus(), 50);
+        }
+
+        // 打字機效果 (已移除自動隱藏)
         function typeWriter(text) {
             let i = 0;
             aiText.innerHTML = "";
@@ -340,24 +358,10 @@
                 } else {
                     clearInterval(interval);
                     orbSpeed = 1;
-                    startAutoHide();
+                    // startAutoHide(); // 已取消自動隱藏
                 }
             }, 30);
         }
-
-        function startAutoHide() {
-            clearTimeout(autoHideTimer);
-            // 在某些關鍵步驟，我們不希望字太快消失，只有閒置時才消失
-            autoHideTimer = setTimeout(() => {
-                // 如果是對話框還在顯示，淡出
-                // 但如果是在 INTRO 階段，我們可能想讓它留久一點，這裡先保持統一 15秒
-                gsap.to(aiResponseDiv, { opacity: 0, y: 30 });
-            }, 15000);
-        }
-
-        aiResponseDiv.addEventListener('mouseenter', () => clearTimeout(autoHideTimer));
-        aiResponseDiv.addEventListener('mouseleave', () => startAutoHide());
-
 
         // --- 核心流程 ---
 
@@ -365,30 +369,13 @@
         window.onload = () => {
             setTimeout(() => {
                 // 模擬 AI 說話
-                const greeting = "嗶嗶，訊號掃描中，掃描到你(玩家)，出現在我的面前了。\n請告訴歐佩可，你的「怪物彈珠」遊戲暱稱，這樣你才能當歐佩可的經紀人哦！";
+                const greeting = "嗶嗶，訊號掃描中，掃描到你(玩家)，出現在我的面前了。\n請告訴歐佩可，你的「怪物彈珠」遊戲暱稱，這樣你才能當歐佩可的經紀人哦！\n(請點擊畫面任意處輸入)";
                 typeWriter(greeting);
 
-                // 顯示輸入框
-                setTimeout(() => {
-                    showInput("請輸入【怪物彈珠】遊戲暱稱 (10字內)");
-                    currentStep = STEPS.NICKNAME;
-                }, 2000);
+                // 設定狀態，但不自動彈出輸入框
+                currentStep = STEPS.NICKNAME;
             }, 1000);
         };
-
-        function showInput(placeholder) {
-            dialog.style.display = 'block';
-            mainInput.placeholder = placeholder;
-            mainInput.value = "";
-            mainInput.disabled = false;
-
-            // 讓輸入框出現在合適位置 (例如中央下方)
-            gsap.fromTo(dialog,
-                { scale: 0.8, opacity: 0, left: window.innerWidth / 2 - 180, top: window.innerHeight - 150 },
-                { scale: 1, opacity: 1, duration: 0.4 }
-            );
-            setTimeout(() => mainInput.focus(), 50);
-        }
 
         // 2. 輸入處理
         mainInput.addEventListener("keydown", async e => {
@@ -406,11 +393,8 @@
                     sessionStorage.setItem('opeco_nickname', userInput);
                     hideInput();
 
-                    typeWriter(`收到！${userInput} 經紀人。接下來，請告訴我你的遊戲 UID。`);
-                    setTimeout(() => {
-                        showInput("請輸入【怪物彈珠】遊戲UID (9位數字)");
-                        currentStep = STEPS.UID;
-                    }, 1500);
+                    typeWriter(`收到！${userInput} 經紀人。接下來，請告訴我你的遊戲 UID。\n(請點擊畫面輸入)`);
+                    currentStep = STEPS.UID;
                     return;
                 }
 
@@ -450,12 +434,10 @@
 
             // 10秒後詢問生日
             setTimeout(() => {
-                typeWriter("準備好了嗎？\n首先，請告訴我你的「出生年月日」，讓我連結你的星盤數據。");
-                setTimeout(() => {
-                    showInput("請輸入生日 (例如 19900101)");
-                    currentStep = STEPS.BIRTHDAY;
-                }, 1500);
-            }, 10000); // 10秒延遲
+                typeWriter("準備好了嗎？\n首先，請告訴我你的「出生年月日」，讓我連結你的星盤數據。\n(請點擊畫面輸入)");
+                currentStep = STEPS.BIRTHDAY;
+                // 不自動 showInput
+            }, 10000);
         }
 
         // 3. AI 串接 (處理生日與時間)
@@ -481,14 +463,13 @@
             // 動態附加 Prompt，確保 AI 知道現在要幹嘛
             let contextInstruction = "";
             if (currentStep === STEPS.BIRTHDAY) {
-                contextInstruction = "(系統提示：使用者正在輸入生日。請判斷是否為有效日期。若是，請回應「收到生日」，並詢問出生時間(幾點? 白天或晚上?)。若否，請引導重新輸入。)";
+                contextInstruction = "(系統提示：使用者正在輸入生日。請判斷是否為有效日期。若是，請回應「收到」，並詢問出生時間(幾點? 白天或晚上?)。若否，請引導重新輸入。)";
             } else if (currentStep === STEPS.TIME) {
                 contextInstruction = "(系統提示：使用者正在輸入出生時間。請判斷是否能推算出星座命盤。若資訊足夠，請回應「數據鎖定完成」，並準備跳轉。)";
             }
 
             const activeHistory = [
                 ...chatHistory,
-                // 為了讓 AI 記住前面的設定，我們可以在這裡偷偷塞入 User 的暱稱與 UID 資訊 (可選)
                 { role: "user", parts: [{ text: `目前狀態: ${contextInstruction}\n使用者輸入: ${userMessage}` }] }
             ];
 
@@ -509,29 +490,15 @@
 
                 const aiResponse = data.candidates[0].content.parts[0].text;
 
-                // 記錄對話
                 chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
                 chatHistory.push({ role: "model", parts: [{ text: aiResponse }] });
 
-                // 邏輯判斷是否推進步驟
                 if (currentStep === STEPS.BIRTHDAY) {
-                    // 簡單判斷：如果 AI 的回應包含 "時間" 關鍵字，通常代表生日 OK 了，在問時間
-                    // 為了更準確，我們可以用 Regex 抓 AI 是否說 "收到" 或 "確認"
-                    // 這裡先簡單處理：只要 AI 有回應，我們就假設它處理了，但為了保險，我們強制切換步驟
-                    // *更好的做法*：讓 AI 輸出 JSON，但現在先用關鍵字
-                    if (aiResponse.includes("時間") || aiResponse.includes("點")) {
-                        setTimeout(() => {
-                            showInput("請輸入出生時間 (0-23或時辰)");
-                            currentStep = STEPS.TIME;
-                        }, 2000);
-                    } else {
-                        // AI 可能在糾正日期，保持在 Birthday 步驟
-                        setTimeout(() => {
-                            showInput("請重新輸入生日");
-                        }, 2000);
+                    if (aiResponse.includes("時間") || aiResponse.includes("點") || aiResponse.includes("收到")) {
+                        // 切換狀態，下次點擊就會問時間
+                        currentStep = STEPS.TIME;
                     }
                 } else if (currentStep === STEPS.TIME) {
-                    // 檢查跳轉
                     const redirectRegex = /數據鎖定|鎖定完成|Data Locked/i;
                     if (redirectRegex.test(aiResponse)) {
                         sessionStorage.setItem('opeco_history', JSON.stringify(chatHistory));
@@ -544,11 +511,6 @@
                                 }
                             });
                         }, 3000);
-                    } else {
-                        // AI 可能還在確認時間
-                        setTimeout(() => {
-                            showInput("請繼續輸入時間資訊");
-                        }, 2000);
                     }
                 }
 

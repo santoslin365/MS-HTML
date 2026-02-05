@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <style>
         /* 視覺完全保留你最愛的「版本一」，但質感大升級 */
+        /* 視覺完全保留你最愛的「版本一」，但質感大升級 */
         body,
         html {
             margin: 0;
@@ -16,11 +17,26 @@
             height: 100vh;
             background-color: #000;
             overflow: hidden;
+            max-width: 100vw;
+            /* 確保不超過視窗寬度 */
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             /* 確保字體優先級 */
+        }
+
+        /* 背景容器：嚴格限制範圍，避免光球撐大手機版面 */
+        .orb-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            /* 修正：改為 0 避免被 body 背景蓋住 */
+            pointer-events: none;
         }
 
         .orb {

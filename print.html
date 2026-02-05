@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 繼承版本一經典視覺與質感 UI */
+        /* 繼承版本一經典視覺與質感 UI */
         body,
         html {
             margin: 0;
@@ -17,11 +18,24 @@
             height: 100vh;
             background-color: #000;
             overflow: hidden;
+            max-width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
             color: #fff;
+        }
+
+        /* 背景容器：嚴格限制範圍 */
+        .orb-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
         }
 
         .orb {

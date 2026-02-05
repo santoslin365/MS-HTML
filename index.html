@@ -54,7 +54,8 @@
 
         #center-image {
             position: relative;
-            max-width: 500px;
+            max-width: clamp(300px, 40vw, 600px);
+            /* 桌面版也自適應：最小300px, 佔視窗40%, 最大600px */
             z-index: 5;
             mix-blend-mode: lighten;
             pointer-events: none;
@@ -92,6 +93,11 @@
             z-index: 1000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease;
+
+            /* 桌面版自適應寬度 */
+            width: auto;
+            min-width: 320px;
+            max-width: 90vw;
         }
 
         #input-dialog:hover {
@@ -106,7 +112,10 @@
             background: rgba(0, 0, 0, 0.3);
             color: white;
             outline: none;
-            width: 320px;
+
+            /* 輸入框內容自適應 */
+            width: clamp(280px, 30vw, 400px);
+
             font-size: 16px;
             letter-spacing: 1px;
             transition: all 0.3s ease;
@@ -125,8 +134,11 @@
             bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
-            width: 600px;
-            max-width: 90vw;
+
+            /* 桌面版自適應寬度 */
+            width: clamp(300px, 60vw, 800px);
+
+            max-width: 95vw;
             max-height: 30vh;
             overflow-y: auto;
 
@@ -227,6 +239,50 @@
         #ai-response::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.4);
         }
+
+        /* --- 手機版 RWD 適配 --- */
+        @media (max-width: 768px) {
+
+            /* 1. Logo 自適應調整並上移 (對應紅框位置) */
+            #center-image {
+                position: absolute;
+                /* 改為絕對定位以便精確控制位置 */
+                top: 15%;
+                /* 移至上方約 15% 處 */
+                max-width: 60%;
+                /* 縮小寬度，避免太滿 */
+                height: auto;
+            }
+
+            /* 2. AI 回覆框自適應 */
+            #ai-response {
+                width: 80%;
+                /* 收窄寬度，增加左右留白 */
+                bottom: 30px;
+                /* 距離底部稍微拉高 */
+                padding: 25px 30px;
+                /* 內距微調 */
+                font-size: 1rem;
+                /* 字體稍微縮小適配 */
+                max-height: 25vh;
+                /* 避免遮太多 */
+            }
+
+            /* 3. 輸入對話框 (Input Dialog) */
+            /* 使用者偏好：即使在手機上，也讓輸入框跟隨點擊位置，保持沉浸感 */
+            #input-dialog {
+                width: 80%;
+            }
+
+            #input-dialog input {
+                width: 100%;
+                /* 填滿容器 */
+                box-sizing: border-box;
+                /* border-box 很重要，防止 padding 撐爆 */
+                font-size: 16px;
+                /* 防止 iOS 自動放大 */
+            }
+        }
     </style>
 </head>
 
@@ -247,7 +303,7 @@
 
     <script>
         // --- 基本配置 ---
-        const KEY = "AIzaSyA_2rV7xsxaNlUDET_Ab9A4E6SOSx8p4tQ";
+        const KEY = "AIzaSyCJTlB5aAN8vad0AH2ISj1i8TFD8336aEc";
         const MODEL = "gemini-3-flash-preview";
         const SPIRIT_FILE = "./opeco.txt";
 

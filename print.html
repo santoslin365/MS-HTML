@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>opeco - 靈魂頻譜分析結果</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* 繼承版本一經典視覺與質感 UI */
         body,
@@ -53,9 +54,11 @@
         }
 
         /* 結果卡片容器 */
+        /* 結果卡片容器 */
         #result-card {
             position: relative;
-            width: 500px;
+            /* 桌面版自適應寬度 */
+            width: clamp(300px, 40vw, 600px);
             max-width: 90vw;
             padding: 50px 40px;
             text-align: center;
@@ -72,6 +75,27 @@
             opacity: 0;
             transform: translateY(20px);
             z-index: 10;
+        }
+
+        /* --- 手機版 RWD 適配 --- */
+        @media (max-width: 768px) {
+            #result-card {
+                width: 85%;
+                padding: 30px 20px;
+            }
+
+            #score-value {
+                font-size: 4.5rem !important;
+                /* 縮小分數顯示 */
+            }
+
+            #archetype-title {
+                font-size: 1.8rem !important;
+            }
+
+            #archetype-desc {
+                font-size: 1rem !important;
+            }
         }
 
         h1 {
@@ -122,26 +146,53 @@
             opacity: 0;
         }
 
-        /* 重新開始按鈕 */
-        .restart-btn {
+        /* 按鈕群組 */
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            opacity: 0;
+            /* 預設隱藏，等動畫顯示 */
+        }
+
+        /* 主按鈕 (下載圖片) */
+        .primary-btn {
             display: inline-block;
             padding: 12px 40px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
+            background: linear-gradient(45deg, #00d2ff, #00ff88);
+            border: none;
+            color: #000;
+            font-weight: bold;
             font-size: 1rem;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
             letter-spacing: 1px;
-            opacity: 0;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
         }
 
-        .restart-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.5);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        .primary-btn:hover {
             transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+        }
+
+        /* 次要按鈕 (結束測試) */
+        .secondary-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 30px;
+            font-size: 0.9rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .secondary-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: #fff;
         }
     </style>
 </head>
@@ -170,7 +221,13 @@
         <div id="archetype-title">載入中...</div>
         <div id="archetype-desc">正在解碼您的靈魂數據...</div>
 
-        <div class="restart-btn" onclick="restart()">重新連線</div>
+        <!-- 按鈕區塊 -->
+        <div class="btn-group">
+            <!-- 1. 下載圖片 (主按鈕) -->
+            <div class="primary-btn" onclick="downloadCard()">下載圖片</div>
+            <!-- 2. 結束測試 (次要按鈕) -->
+            <div class="secondary-btn" onclick="endTest()">結束測試</div>
+        </div>
     </div>
 
     <script>
@@ -236,7 +293,7 @@
         function showArchetype() {
             const titleEl = document.getElementById("archetype-title");
             const descEl = document.getElementById("archetype-desc");
-            const restartBtn = document.querySelector(".restart-btn");
+            const btnGroup = document.querySelector(".btn-group");
 
             titleEl.innerText = archetype.title;
             titleEl.style.color = archetype.color;
@@ -247,10 +304,48 @@
             // 依序淡入
             gsap.to(titleEl, { opacity: 1, y: -5, duration: 0.8, delay: 0 });
             gsap.to(descEl, { opacity: 1, y: -5, duration: 0.8, delay: 0.3 });
-            gsap.to(restartBtn, { opacity: 1, y: 0, duration: 0.8, delay: 0.8 });
+            gsap.to(btnGroup, { opacity: 1, y: 0, duration: 0.8, delay: 0.8 });
         }
 
-        function restart() {
+        // --- 下載圖片功能 ---
+        // --- 下載圖片功能 ---
+        function downloadCard() {
+            const card = document.getElementById('result-card');
+
+            // 修正：使用 onclone 處理截圖時的特殊樣式，不直接操作 DOM
+            html2canvas(card, {
+                backgroundColor: null, // 透明背景
+                scale: 2, // 提高解析度 (Retina)
+                onclone: (clonedDoc) => {
+                    // 1. 修正分數的灰色背景 (html2canvas 對 background-clip: text 支援度不佳的問題)
+                    // 在截圖時將其改回純白字體
+                    const scoreEl = clonedDoc.getElementById('score-value');
+                    if (scoreEl) {
+                        scoreEl.style.background = 'none';
+                        scoreEl.style.webkitTextFillColor = 'initial';
+                        scoreEl.style.color = '#ffffff';
+                    }
+
+                    // 2. 在截圖中直接隱藏按鈕群組 (比操作 display:none 更穩)
+                    const btnGroup = clonedDoc.querySelector('.btn-group');
+                    if (btnGroup) {
+                        btnGroup.style.display = 'none';
+                    }
+                }
+            }).then(canvas => {
+                // 下載觸發
+                const link = document.createElement('a');
+                link.download = `opeco-soul-${nickname}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            }).catch(err => {
+                console.error("截圖失敗:", err);
+                alert("圖片下載失敗，請稍後再試。");
+            });
+        }
+
+        // --- 結束測試 (原 Restart) ---
+        function endTest() {
             // 清除資料
             sessionStorage.removeItem('opeco_history');
             sessionStorage.removeItem('opeco_system');

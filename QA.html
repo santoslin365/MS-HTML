@@ -256,7 +256,7 @@
 
     <script>
         // --- 基本配置 ---
-        const KEY = "AIzaSyDl9vUpq14CojZzHO0M5HBA7k0o2WlyF_Y";
+        const KEY = "AIzaSyDTkt4b4yedqFuSiqwtWlyxZiIof2m68Sc";
         const MODEL = "gemini-3-flash-preview";
 
         // 從 sessionStorage 讀取繼承的資料
@@ -433,68 +433,132 @@
                 aiResponseDiv.classList.add('processing'); // 啟動呼吸燈效
                 aiText.innerHTML = "<span style='opacity:0.8; color:#00ff88; animation: pulse 0.5s infinite'>嗶嗶，資料掃描分析中...</span>";
 
-                // 準備給 AI 的指令：評分 (不需回應)
+                // 準備給 AI 的指令：評分 + 短評 (帶入 Opeco 人設)
                 const q = qaQuestions[currentQIndex];
 
                 // 明確告訴 AI 只要輸出分數，不要寫評語
                 // 加入 JSON 強制指令與評分標準：相關性高=高分，無關=低分
                 const nextInstruction = `(系統指令：使用者回答了第 ${currentQIndex + 1} 題：『${userAns}』。題目：『${q.context}』。
                 
-                請依據使用者回答與題目情境的『相關性』進行 1-10 分的評分：
-                1. 若回答與題目情境高度相關、符合邏輯或富有創意 -> 給予高分 (7-10 分)。
-                2. 若回答與題目完全無關、胡言亂語或不知所云 -> 給予低分 (1-3 分)。
-                
+                請扮演 歐佩可 (Opeco)，針對使用者的回答給予：
+                1. 評分 (1-10分)：依據回答的創意與相關性，越有趣越高分。
+                2. 短評 (60字內)：用歐佩可的語氣 (有點毒舌但又可愛)，針對這個回答進行「反應+分析」。先對玩家的選擇表示驚訝或諷刺，接著給出一句看似看穿靈魂的心理分析。
+                **注意：短評中絕對不要出現分數數字，保持神祕感。**
+
                 請 **務必** 僅輸出標準 JSON 格式，不要有Markdown標記，格式如下：
-                {"score": 數字, "reason": "簡短評語"}
+                {"score": 數字, "comment": "簡短評語"}
                 )`;
 
                 // 呼叫 API 進行評分
+                // 呼叫 API 進行評分
                 try {
-                    // 我們預期 AI 回傳的是 JSON 字串
                     let rawResponse = await callGemini(nextInstruction);
+                    console.log("Raw AI Response:", rawResponse);
 
-                    // 清理可能存在的 Markdown code block 標記 (```json ... ```)
-                    rawResponse = rawResponse.replace(/```json/g, "").replace(/```/g, "").trim();
+                    let result = null;
 
-                    console.log("Raw AI Response for Scoring (JSON):", rawResponse);
+                    // --- 防護一：強力外科手術式讀取 (Regex Parsing) ---
+                    // 尋找字串中第一個及最後一個大括號，嘗試抓出 JSON 物件
+                    const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
 
-                    // 解析 JSON
-                    const result = JSON.parse(rawResponse);
+                    if (jsonMatch) {
+                        try {
+                            result = JSON.parse(jsonMatch[0]);
+                        } catch (e) {
+                            console.warn("Regex found something like JSON but parse failed:", e);
+                        }
+                    }
 
                     // 停止呼吸燈效
                     aiResponseDiv.classList.remove('processing');
 
                     if (result && typeof result.score === 'number') {
+                        // --- 成功讀取 ---
                         const score = result.score;
+                        const comment = result.comment || "收到！已記錄數據。"; // 保底評論
                         totalScore += score;
-                        console.log(`Question ${currentQIndex + 1} Score: ${score}, Total: ${totalScore}, Reason: ${result.reason}`);
+                        console.log(`Question ${currentQIndex + 1} Score: ${score}, Total: ${totalScore}`);
+
+                        // --- 互動環節：顯示 AI 評論 ---
+                        typeWriter(comment, () => {
+                            // 顯示「下一題」按鈕
+                            showNextButton();
+                        });
                     } else {
-                        // JSON 解析成功但格式不對
-                        console.warn("JSON parsed but score missing. Fallback 5.");
-                        totalScore += 5;
+                        throw new Error("JSON parsing failed or no score found");
                     }
 
                 } catch (e) {
-                    console.error("Scoring failed (JSON parse error):", e);
+                    console.error("Scoring failed (Fallback triggered):", e);
                     // 停止呼吸燈效 (防呆)
                     aiResponseDiv.classList.remove('processing');
-                    // 保底分
-                    totalScore += 5;
+
+                    // --- 防護二 & 三：隨機波動 + 字數同情分保底 ---
+                    // 根據使用者回答長度決定保底分段
+                    // 字數多 (>5字) -> 保底 5~8 分
+                    // 字數少 (<=5字) -> 保底 3~6 分
+                    // 這樣就算 AI 壞掉，看起來也不會都是 5 分，而且感覺好像真的有在看你寫多寫少
+
+                    const len = userAns.length;
+                    let baseScore = 0;
+
+                    if (len > 5) {
+                        // 隨機 5, 6, 7, 8
+                        baseScore = Math.floor(Math.random() * 4) + 5;
+                    } else {
+                        // 隨機 3, 4, 5, 6
+                        baseScore = Math.floor(Math.random() * 4) + 3;
+                    }
+
+                    console.warn(`Fallback Score Applied: ${baseScore} (User Input Length: ${len})`);
+                    totalScore += baseScore;
+
+                    // 保底評論
+                    const fallbackComments = [
+                        "嗯...這回答很有你的風格呢！",
+                        "收到！數據有點波動，但我記錄下來了。",
+                        "哦？真是令人意外的答案。",
+                        "嗶嗶...資料存檔完畢！"
+                    ];
+                    const randomComment = fallbackComments[Math.floor(Math.random() * fallbackComments.length)];
+
+                    typeWriter(randomComment, () => {
+                        showNextButton();
+                    });
                 }
 
-                // 評分完成，直接進入下一題 (不顯示 AI 的回應，因為我們要求它不回應)
-                currentQIndex++;
-                if (currentQIndex < qaQuestions.length) {
-                    // 模擬一點運算延遲感
-                    setTimeout(() => {
-                        startQuestion(currentQIndex);
-                    }, 1000);
-                } else {
-                    // 全部結束
-                    finishQuiz();
-                }
+
             }
         });
+
+        function showNextButton() {
+            const btn = document.createElement('div');
+            btn.className = 'action-btn';
+            btn.innerText = (currentQIndex < qaQuestions.length - 1) ? '下一題' : '查看結果';
+            btn.style.marginTop = '20px'; // 確保間距
+
+            btn.onclick = () => {
+                // 淡出按鈕
+                gsap.to(btn, { opacity: 0, scale: 0.8, duration: 0.3, onComplete: () => btn.remove() });
+
+                // 進入下一題邏輯
+                currentQIndex++;
+                if (currentQIndex < qaQuestions.length) {
+                    // 淡出舊文字再換新題目
+                    gsap.to(aiText, {
+                        opacity: 0, y: -10, duration: 0.5, onComplete: () => {
+                            startQuestion(currentQIndex);
+                        }
+                    });
+                } else {
+                    finishQuiz();
+                }
+            };
+
+            aiText.appendChild(document.createElement('br'));
+            aiText.appendChild(btn);
+            gsap.from(btn, { opacity: 0, y: 10, duration: 0.5 });
+        }
 
         function finishQuiz() {
             // 顯示結束語
